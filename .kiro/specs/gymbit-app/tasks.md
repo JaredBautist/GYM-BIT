@@ -10,7 +10,7 @@ Implementación incremental de GymBit como plataforma fitness multiplataforma (R
 
 ## Tareas
 
-- [ ] 1. Configurar infraestructura base del proyecto
+- [~] 1. Configurar infraestructura base del proyecto
   - Inicializar monorepo con workspaces: `packages/mobile` (Expo), `packages/web` (React PWA), `packages/backend` (Express), `packages/shared` (tipos y utilidades comunes)
   - Configurar TypeScript estricto en todos los paquetes con `tsconfig.json` compartido
   - Configurar ESLint + Prettier con reglas comunes

@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-native",
+    "lib": ["ES2022", "DOM"],
+    "noEmit": true,
+    "allowJs": true,
+    "paths": {
+      "@gymbit/shared": ["../shared/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "app/**/*"],
+  "exclude": ["node_modules"]
+}
