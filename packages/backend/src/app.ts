@@ -11,7 +11,9 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { authRouter } from './routes/auth/index.js';
+import { nutritionRouter } from './routes/nutrition/index.js';
 import { profileRouter } from './routes/profile/index.js';
+import { workoutRouter, exercisesRouter } from './routes/workouts/index.js';
 
 export function createApp(): express.Application {
   const app = express();
@@ -54,6 +56,7 @@ export function createApp(): express.Application {
 
   // Public routes — no JWT required
   app.use('/auth', authRouter);
+  app.use('/exercises', exercisesRouter); // public exercise catalogue (Requirement 4.2)
 
   // ── JWT authentication middleware (Requirement 1.10) ─────────────────────
   // All routes mounted AFTER this line require a valid Bearer token.
@@ -61,8 +64,8 @@ export function createApp(): express.Application {
 
   // Protected routes — require valid JWT
   app.use('/profile', profileRouter);
-  // app.use('/workouts',   workoutRouter);
-  // app.use('/nutrition',  nutritionRouter);
+  app.use('/workouts', workoutRouter);
+  app.use('/nutrition', nutritionRouter);
   // app.use('/sleep',      sleepRouter);
   // app.use('/analytics',  analyticsRouter);
   // app.use('/wearables',  wearableRouter);

@@ -1,4 +1,4 @@
-﻿# Plan de ImplementaciÃ³n: GymBit
+# Plan de ImplementaciÃ³n: GymBit
 
 ## VisiÃ³n General
 
@@ -64,11 +64,11 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Testear rechazo de peso fuera de rango
     - _Requisitos: 3.6, 3.7, 3.8_
 
-- [ ] 4. Checkpoint â€” Verificar que todos los tests pasen
+- [x] 4. Checkpoint â€” Verificar que todos los tests pasen
   - Asegurar que todos los tests de Auth_Service y Profile_Service pasen. Consultar al usuario si surgen dudas.
 
 - [ ] 5. Implementar Workout_Engine (backend)
-  - [ ] 5.1 Implementar catÃ¡logo de ejercicios y generaciÃ³n de rutinas
+  - [x] 5.1 Implementar catÃ¡logo de ejercicios y generaciÃ³n de rutinas
     - Crear `GET /exercises` con filtros por grupo muscular y equipamiento
     - Crear `POST /workouts/generate` con lÃ³gica de selecciÃ³n de tipo de rutina (Full Body / PPL / Upper-Lower / Cardio)
     - Implementar reglas de selecciÃ³n: dÃ­as disponibles, objetivo, nivel de experiencia (secciÃ³n 3.3 del diseÃ±o)
@@ -76,7 +76,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Crear `GET /workouts/plan` para obtener el plan activo
     - _Requisitos: 4.1, 4.2, 4.3, 4.6, 4.7_
 
-  - [ ] 5.2 Escribir tests de propiedad para selecciÃ³n de rutina
+  - [x] 5.2 Escribir tests de propiedad para selecciÃ³n de rutina
     - **Propiedad 4: Principiante siempre recibe Full Body independientemente de los dÃ­as disponibles**
     - **Valida: Requisito 4.1**
     - **Propiedad 5: Objetivo ENDURANCE siempre produce Cardio puro**
@@ -84,7 +84,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - **Propiedad 6: Rutina sin equipamiento contiene Ãºnicamente ejercicios de peso corporal**
     - **Valida: Requisitos 4.6, 4.7**
 
-  - [ ] 5.3 Implementar sesiones de entrenamiento y SerieLog
+  - [x] 5.3 Implementar sesiones de entrenamiento y SerieLog
     - Crear `POST /workouts/sessions`, `PUT /workouts/sessions/:id`, `POST /workouts/sessions/:id/complete`
     - Crear `POST /workouts/series` para registrar cada serie (peso, reps, timestamp)
     - Calcular volumen total (kg Ã— reps) y duraciÃ³n al completar sesiÃ³n
@@ -92,25 +92,25 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Crear `GET /workouts/sessions` (historial) y `GET /workouts/prs`
     - _Requisitos: 5.3, 5.4, 5.5, 4.5_
 
-  - [ ] 5.4 Escribir tests unitarios para cÃ¡lculo de volumen y detecciÃ³n de PRs
+  - [x] 5.4 Escribir tests unitarios para cÃ¡lculo de volumen y detecciÃ³n de PRs
     - Testear cÃ¡lculo de volumen total
     - Testear detecciÃ³n correcta de PR (nuevo mÃ¡ximo de peso Ã— reps)
     - _Requisitos: 5.4, 5.5, 4.5_
 
-  - [ ] 5.5 Implementar Sobrecarga_Progresiva
+  - [x] 5.5 Implementar Sobrecarga_Progresiva
     - Al iniciar sesiÃ³n, verificar si la sesiÃ³n anterior tuvo 100% de series y reps completadas
     - Aplicar incremento: +2.5 kg para ejercicios de aislamiento, +5 kg para compuestos
     - Actualizar `weight_kg` en `PLAN_EXERCISES` para la siguiente sesiÃ³n
     - _Requisitos: 4.4_
 
-  - [ ] 5.6 Escribir tests de propiedad para Sobrecarga_Progresiva
+  - [x] 5.6 Escribir tests de propiedad para Sobrecarga_Progresiva
     - **Propiedad 7: Incremento de carga solo ocurre cuando completion_rate = 100%**
     - **Valida: Requisito 4.4**
     - **Propiedad 8: Ejercicio compuesto recibe incremento â‰¥ ejercicio de aislamiento**
     - **Valida: Requisito 4.4**
 
 - [ ] 6. Implementar Nutrition_Service (backend)
-  - [ ] 6.1 Implementar bÃºsqueda y registro de alimentos
+  - [x] 6.1 Implementar bÃºsqueda y registro de alimentos
     - Crear `GET /nutrition/search?q=` con integraciÃ³n a USDA FoodData API (< 3 s)
     - Crear `POST /nutrition/barcode` para bÃºsqueda por cÃ³digo de barras
     - Crear `POST /nutrition/daily/meals` y `POST /nutrition/daily/meals/:id/foods`
@@ -119,7 +119,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Actualizar totales de macros en `DAILY_RECORDS` en tiempo real al agregar/eliminar alimentos
     - _Requisitos: 6.1, 6.2, 6.4_
 
-  - [ ] 6.2 Implementar recetas y plan nutricional
+  - [x] 6.2 Implementar recetas y plan nutricional
     - Crear `GET /nutrition/recipes`, `POST /nutrition/recipes`
     - Calcular macros totales de receta a partir de ingredientes y porciones
     - Crear `POST /nutrition/plan/generate` con cÃ¡lculo de objetivo calÃ³rico segÃºn objetivo del usuario
@@ -127,7 +127,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Crear `GET /nutrition/plan` para obtener el plan activo
     - _Requisitos: 6.5, 6.6, 7.1, 7.2, 7.3_
 
-  - [ ] 6.3 Escribir tests de propiedad para cÃ¡lculo nutricional
+  - [x] 6.3 Escribir tests de propiedad para cÃ¡lculo nutricional
     - **Propiedad 9: CalorÃ­as totales de receta = suma de calorÃ­as de cada ingrediente Ã— porciÃ³n**
     - **Valida: Requisito 6.6**
     - **Propiedad 10: Objetivo calÃ³rico LOSE_WEIGHT < TDEE < objetivo calÃ³rico GAIN_MUSCLE**
@@ -135,7 +135,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - **Propiedad 11: Macros distribuidos cubren exactamente el objetivo calÃ³rico (proteÃ­nasÃ—4 + carbosÃ—4 + grasasÃ—9 â‰ˆ objetivo_kcal)**
     - **Valida: Requisito 7.2**
 
-  - [ ] 6.4 Escribir tests unitarios para Nutrition_Service
+  - [x] 6.4 Escribir tests unitarios para Nutrition_Service
     - Testear actualizaciÃ³n de totales diarios al agregar y eliminar alimentos
     - Testear recÃ¡lculo del plan al cambiar objetivo o peso
     - _Requisitos: 6.4, 7.4_
