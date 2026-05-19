@@ -1,5 +1,5 @@
 /**
- * Simple migration runner using node-postgres.
+ * Simple migration runner using mysql2.
  * Tracks applied migrations in a `schema_migrations` table.
  *
  * Usage:
@@ -11,55 +11,66 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Pool } from 'pg';
+import mysql from 'mysql2/promise';
 
 import { env } from '../config/env.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
 
-async function ensureMigrationsTable(pool: Pool): Promise<void> {
-  await pool.query(`
+async function ensureMigrationsTable(conn: mysql.Connection): Promise<void> {
+  await conn.execute(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
-      id         SERIAL      PRIMARY KEY,
-      filename   TEXT        NOT NULL UNIQUE,
-      applied_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      id         INT          NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      filename   VARCHAR(255) NOT NULL UNIQUE,
+      applied_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
 }
 
-async function getAppliedMigrations(pool: Pool): Promise<Set<string>> {
-  const result = await pool.query<{ filename: string }>(
+async function getAppliedMigrations(conn: mysql.Connection): Promise<Set<string>> {
+  const [rows] = await conn.execute<mysql.RowDataPacket[]>(
     'SELECT filename FROM schema_migrations ORDER BY id',
   );
-  return new Set(result.rows.map((r) => r.filename));
+  return new Set(rows.map((r) => r['filename'] as string));
 }
 
-async function applyMigration(pool: Pool, filename: string, sql: string): Promise<void> {
-  const client = await pool.connect();
+async function applyMigration(
+  conn: mysql.Connection,
+  filename: string,
+  sql: string,
+): Promise<void> {
+  // Split on semicolons so we can run each statement individually
+  // (mysql2 does not support multi-statement strings by default)
+  const statements = sql
+    .split(';')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+
+  await conn.beginTransaction();
   try {
-    await client.query('BEGIN');
-    await client.query(sql);
-    await client.query('INSERT INTO schema_migrations (filename) VALUES ($1)', [filename]);
-    await client.query('COMMIT');
+    for (const stmt of statements) {
+      await conn.execute(stmt);
+    }
+    await conn.execute('INSERT INTO schema_migrations (filename) VALUES (?)', [filename]);
+    await conn.commit();
     console.log(`  ✓ Applied: ${filename}`);
   } catch (err) {
-    await client.query('ROLLBACK');
+    await conn.rollback();
     throw err;
-  } finally {
-    client.release();
   }
 }
 
 async function runMigrations(): Promise<void> {
-  const pool = new Pool({
-    connectionString: env.DATABASE_URL,
-    ssl: env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false,
+  const conn = await mysql.createConnection({
+    uri: env.DATABASE_URL,
+    ...(env.NODE_ENV === 'production' && { ssl: { rejectUnauthorized: true } }),
+    multipleStatements: false,
   });
 
   try {
-    await ensureMigrationsTable(pool);
-    const applied = await getAppliedMigrations(pool);
+    await ensureMigrationsTable(conn);
+    const applied = await getAppliedMigrations(conn);
 
     const files = fs
       .readdirSync(MIGRATIONS_DIR)
@@ -72,7 +83,7 @@ async function runMigrations(): Promise<void> {
         continue;
       }
       const sql = fs.readFileSync(path.join(MIGRATIONS_DIR, file), 'utf8');
-      await applyMigration(pool, file, sql);
+      await applyMigration(conn, file, sql);
       count++;
     }
 
@@ -82,7 +93,7 @@ async function runMigrations(): Promise<void> {
       console.log(`\n${count} migration(s) applied successfully.`);
     }
   } finally {
-    await pool.end();
+    await conn.end();
   }
 }
 

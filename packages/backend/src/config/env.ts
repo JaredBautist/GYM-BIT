@@ -12,8 +12,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
 
-  // PostgreSQL
-  DATABASE_URL: z.string().url('DATABASE_URL must be a valid PostgreSQL connection URL'),
+  // MySQL
+  DATABASE_URL: z.string().url('DATABASE_URL must be a valid MySQL connection URL'),
 
   // Redis
   REDIS_URL: z.string().url('REDIS_URL must be a valid Redis connection URL'),

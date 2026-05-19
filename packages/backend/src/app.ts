@@ -9,6 +9,9 @@ import express from 'express';
 import helmet from 'helmet';
 
 import { env } from './config/env.js';
+import { authenticate } from './middleware/auth.middleware.js';
+import { authRouter } from './routes/auth/index.js';
+import { profileRouter } from './routes/profile/index.js';
 
 export function createApp(): express.Application {
   const app = express();
@@ -47,9 +50,17 @@ export function createApp(): express.Application {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
-  // ── API routes (to be added in subsequent tasks) ─────────────────────────
-  // app.use('/auth',       authRouter);
-  // app.use('/profile',    profileRouter);
+  // ── API routes ───────────────────────────────────────────────────────────
+
+  // Public routes — no JWT required
+  app.use('/auth', authRouter);
+
+  // ── JWT authentication middleware (Requirement 1.10) ─────────────────────
+  // All routes mounted AFTER this line require a valid Bearer token.
+  app.use(authenticate);
+
+  // Protected routes — require valid JWT
+  app.use('/profile', profileRouter);
   // app.use('/workouts',   workoutRouter);
   // app.use('/nutrition',  nutritionRouter);
   // app.use('/sleep',      sleepRouter);

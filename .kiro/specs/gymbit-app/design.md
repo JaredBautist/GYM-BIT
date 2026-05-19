@@ -1,33 +1,33 @@
-# Documento de Diseño Técnico — GymBit
+﻿# Documento de DiseÃ±o TÃ©cnico â€” GymBit
 
 ## Tabla de Contenidos
 
-1. [Visión General](#1-visión-general)
+1. [VisiÃ³n General](#1-visiÃ³n-general)
 2. [Arquitectura del Sistema](#2-arquitectura-del-sistema)
 3. [Componentes e Interfaces](#3-componentes-e-interfaces)
 4. [Modelos de Datos](#4-modelos-de-datos)
-5. [Propiedades de Corrección](#5-propiedades-de-corrección)
+5. [Propiedades de CorrecciÃ³n](#5-propiedades-de-correcciÃ³n)
 6. [Manejo de Errores](#6-manejo-de-errores)
 7. [Estrategia de Testing](#7-estrategia-de-testing)
 
 ---
 
-## 1. Visión General
+## 1. VisiÃ³n General
 
-GymBit es una plataforma fitness multiplataforma (iOS, Android, Web PWA) que integra gestión de rutinas, nutrición, sueño, wearables y analíticas en una sola experiencia. El sistema opera en modo online y offline completo, priorizando la privacidad del usuario (GDPR / Ley 1581 de Colombia) y el rendimiento (carga inicial < 3 s en 4G).
+GymBit es una plataforma fitness multiplataforma (iOS, Android, Web PWA) que integra gestiÃ³n de rutinas, nutriciÃ³n, sueÃ±o, wearables y analÃ­ticas en una sola experiencia. El sistema opera en modo online y offline completo, priorizando la privacidad del usuario (GDPR / Ley 1581 de Colombia) y el rendimiento (carga inicial < 3 s en 4G).
 
-### Decisiones técnicas clave
+### Decisiones tÃ©cnicas clave
 
-| Decisión | Elección | Justificación |
+| DecisiÃ³n | ElecciÃ³n | JustificaciÃ³n |
 |---|---|---|
-| Frontend móvil | React Native + Expo | Código compartido iOS/Android, acceso a APIs nativas (HealthKit, SQLite, notificaciones), ecosistema maduro |
-| Frontend web | React + PWA | Reutilización de lógica de negocio con el móvil, soporte offline via Service Worker + IndexedDB |
-| Backend | Node.js + Express | Ecosistema JavaScript unificado con el frontend, alto rendimiento I/O para sincronización en tiempo real |
-| Base de datos principal | PostgreSQL | ACID, soporte JSON nativo para datos semiestructurados (logs de wearables), extensiones PostGIS si se requiere geolocalización futura |
-| Autenticación | Auth0 | Gestión de OAuth 2.0 / OIDC delegada, soporte MFA, cumplimiento GDPR out-of-the-box, reduce superficie de ataque |
-| IA Nutrición | Google Gemini Vision | Precisión ≥ 85% en reconocimiento de alimentos, API REST simple, sin necesidad de modelo propio |
-| Offline storage | SQLite (mobile) / IndexedDB (web) | Estándar de la industria para cada plataforma, soporte nativo en Expo (expo-sqlite) |
-| Gráficos | Victory Native / Recharts | Victory Native optimizado para React Native, Recharts para web; API similar reduce curva de aprendizaje |
+| Frontend mÃ³vil | React Native + Expo | CÃ³digo compartido iOS/Android, acceso a APIs nativas (HealthKit, SQLite, notificaciones), ecosistema maduro |
+| Frontend web | React + PWA | ReutilizaciÃ³n de lÃ³gica de negocio con el mÃ³vil, soporte offline via Service Worker + IndexedDB |
+| Backend | Node.js + Express | Ecosistema JavaScript unificado con el frontend, alto rendimiento I/O para sincronizaciÃ³n en tiempo real |
+| Base de datos principal | MySQL | ACID, soporte JSON nativo para datos semiestructurados (logs de wearables), soporte de índices espaciales y funciones geoespaciales para futuras necesidades de geolocalización |
+| AutenticaciÃ³n | Auth0 | GestiÃ³n de OAuth 2.0 / OIDC delegada, soporte MFA, cumplimiento GDPR out-of-the-box, reduce superficie de ataque |
+| IA NutriciÃ³n | Google Gemini Vision | PrecisiÃ³n â‰¥ 85% en reconocimiento de alimentos, API REST simple, sin necesidad de modelo propio |
+| Offline storage | SQLite (mobile) / IndexedDB (web) | EstÃ¡ndar de la industria para cada plataforma, soporte nativo en Expo (expo-sqlite) |
+| GrÃ¡ficos | Victory Native / Recharts | Victory Native optimizado para React Native, Recharts para web; API similar reduce curva de aprendizaje |
 | Notificaciones | Expo Notifications + Firebase FCM | Expo abstrae las diferencias iOS/Android; FCM para entrega confiable en background |
 
 ---
@@ -61,8 +61,8 @@ graph TB
     end
 
     subgraph "Almacenamiento"
-        PG[("PostgreSQL\n(datos principales)")]
-        REDIS[("Redis\n(caché + sesiones)")]
+        PG[("MySQL\\n(datos principales)")]
+        REDIS[("Redis\n(cachÃ© + sesiones)")]
         S3["Object Storage\n(fotos, PDFs, GIFs)"]
     end
 
@@ -133,26 +133,26 @@ sequenceDiagram
     participant Local as SQLite / IndexedDB
     participant Queue as Cola_Offline
     participant Sync as Sync_Service
-    participant DB as PostgreSQL
+    participant DB as MySQL
 
     App->>Local: Escritura local (timestamp)
-    Local->>Queue: Encola operación pendiente
-    Note over App: Sin conexión
+    Local->>Queue: Encola operaciÃ³n pendiente
+    Note over App: Sin conexiÃ³n
 
-    App-->>Sync: Conexión recuperada
+    App-->>Sync: ConexiÃ³n recuperada
     Sync->>Queue: Lee operaciones pendientes
-    loop Por cada operación en cola
+    loop Por cada operaciÃ³n en cola
         Sync->>DB: Aplica escritura
         DB-->>Sync: Confirma
         alt Conflicto detectado
-            Sync->>Sync: Última escritura gana (timestamp)
+            Sync->>Sync: Ãšltima escritura gana (timestamp)
         end
-        Sync->>Queue: Elimina operación procesada
+        Sync->>Queue: Elimina operaciÃ³n procesada
     end
-    Sync-->>App: Notifica sincronización completa
+    Sync-->>App: Notifica sincronizaciÃ³n completa
 ```
 
-### 2.3 Flujo de autenticación
+### 2.3 Flujo de autenticaciÃ³n
 
 ```mermaid
 sequenceDiagram
@@ -168,12 +168,12 @@ sequenceDiagram
     U->>Auth0: Autoriza
     Auth0-->>App: Authorization code
     App->>Auth: POST /auth/callback {code}
-    Auth->>Auth0: Exchange code → tokens
+    Auth->>Auth0: Exchange code â†’ tokens
     Auth0-->>Auth: access_token + id_token
     Auth->>Auth: Crea/actualiza usuario en DB
     Auth->>Auth: Genera JWT (24h) + refresh token (30d)
     Auth-->>App: {accessToken, refreshToken, user}
-    App->>Local: Persiste sesión cifrada (AES-256)
+    App->>Local: Persiste sesiÃ³n cifrada (AES-256)
 ```
 
 ---
@@ -182,47 +182,47 @@ sequenceDiagram
 
 ### 3.1 Auth_Service
 
-**Responsabilidad:** Autenticación, autorización y gestión de sesiones.
+**Responsabilidad:** AutenticaciÃ³n, autorizaciÃ³n y gestiÃ³n de sesiones.
 
 ```
-POST /auth/register          → Registro con correo/contraseña
-POST /auth/login             → Login con correo/contraseña
-POST /auth/callback          → Callback OAuth 2.0 (Google)
-POST /auth/refresh           → Renovar access token
-POST /auth/logout            → Invalidar sesión
-POST /auth/forgot-password   → Solicitar reset de contraseña
-POST /auth/reset-password    → Aplicar nueva contraseña
-GET  /auth/verify-email/:token → Verificar correo
+POST /auth/register          â†’ Registro con correo/contraseÃ±a
+POST /auth/login             â†’ Login con correo/contraseÃ±a
+POST /auth/callback          â†’ Callback OAuth 2.0 (Google)
+POST /auth/refresh           â†’ Renovar access token
+POST /auth/logout            â†’ Invalidar sesiÃ³n
+POST /auth/forgot-password   â†’ Solicitar reset de contraseÃ±a
+POST /auth/reset-password    â†’ Aplicar nueva contraseÃ±a
+GET  /auth/verify-email/:token â†’ Verificar correo
 ```
 
 **Contratos clave:**
-- Contraseñas hasheadas con bcrypt (cost factor ≥ 12)
-- JWT firmado con RS256, expiración 24 h
-- Refresh token rotativo, expiración 30 días, almacenado en DB con hash
-- Rate limiting: 5 intentos fallidos → bloqueo 15 min (Redis)
-- Sesión offline: JWT + datos de usuario cifrados con AES-256 en almacenamiento local
+- ContraseÃ±as hasheadas con bcrypt (cost factor â‰¥ 12)
+- JWT firmado con RS256, expiraciÃ³n 24 h
+- Refresh token rotativo, expiraciÃ³n 30 dÃ­as, almacenado en DB con hash
+- Rate limiting: 5 intentos fallidos â†’ bloqueo 15 min (Redis)
+- SesiÃ³n offline: JWT + datos de usuario cifrados con AES-256 en almacenamiento local
 
 ### 3.2 Profile_Service
 
-**Responsabilidad:** Gestión del perfil físico y cálculo de métricas.
+**Responsabilidad:** GestiÃ³n del perfil fÃ­sico y cÃ¡lculo de mÃ©tricas.
 
 ```
-GET    /profile              → Obtener perfil completo
-PUT    /profile              → Actualizar perfil
-POST   /profile/weight       → Registrar nuevo peso
-GET    /profile/weight/history → Historial de peso
-GET    /profile/metrics      → IMC, TMB, TDEE actuales
+GET    /profile              â†’ Obtener perfil completo
+PUT    /profile              â†’ Actualizar perfil
+POST   /profile/weight       â†’ Registrar nuevo peso
+GET    /profile/weight/history â†’ Historial de peso
+GET    /profile/metrics      â†’ IMC, TMB, TDEE actuales
 ```
 
-**Fórmulas implementadas:**
+**FÃ³rmulas implementadas:**
 
 ```
-IMC = peso_kg / (altura_m)²
+IMC = peso_kg / (altura_m)Â²
 
-TMB (hombre) = 10 × peso_kg + 6.25 × altura_cm − 5 × edad + 5
-TMB (mujer)  = 10 × peso_kg + 6.25 × altura_cm − 5 × edad − 161
+TMB (hombre) = 10 Ã— peso_kg + 6.25 Ã— altura_cm âˆ’ 5 Ã— edad + 5
+TMB (mujer)  = 10 Ã— peso_kg + 6.25 Ã— altura_cm âˆ’ 5 Ã— edad âˆ’ 161
 
-TDEE = TMB × factor_actividad
+TDEE = TMB Ã— factor_actividad
   Sedentario:       1.2
   Ligero (1-3d/sem): 1.375
   Moderado (3-5d):  1.55
@@ -232,126 +232,126 @@ TDEE = TMB × factor_actividad
 
 ### 3.3 Workout_Engine
 
-**Responsabilidad:** Generación de rutinas, modo entrenamiento en vivo, PRs y sobrecarga progresiva.
+**Responsabilidad:** GeneraciÃ³n de rutinas, modo entrenamiento en vivo, PRs y sobrecarga progresiva.
 
 ```
-POST /workouts/generate      → Generar plan de entrenamiento
-GET  /workouts/plan          → Plan activo del usuario
-GET  /workouts/sessions      → Historial de sesiones
-POST /workouts/sessions      → Iniciar sesión
-PUT  /workouts/sessions/:id  → Actualizar sesión activa
-POST /workouts/sessions/:id/complete → Completar sesión
-POST /workouts/series        → Registrar serie
-GET  /workouts/prs           → PRs por ejercicio
-GET  /exercises              → Catálogo de ejercicios
+POST /workouts/generate      â†’ Generar plan de entrenamiento
+GET  /workouts/plan          â†’ Plan activo del usuario
+GET  /workouts/sessions      â†’ Historial de sesiones
+POST /workouts/sessions      â†’ Iniciar sesiÃ³n
+PUT  /workouts/sessions/:id  â†’ Actualizar sesiÃ³n activa
+POST /workouts/sessions/:id/complete â†’ Completar sesiÃ³n
+POST /workouts/series        â†’ Registrar serie
+GET  /workouts/prs           â†’ PRs por ejercicio
+GET  /exercises              â†’ CatÃ¡logo de ejercicios
 ```
 
-**Lógica de selección de rutina:**
+**LÃ³gica de selecciÃ³n de rutina:**
 
 ```
-días_disponibles = 1-2 → Full Body
-días_disponibles = 3   → Full Body o Upper/Lower
-días_disponibles = 4-5 → PPL o Upper/Lower
-días_disponibles = 6+  → PPL
-objetivo = ENDURANCE   → Cardio puro (independiente de días)
-nivel = BEGINNER       → Full Body (independiente de días)
+dÃ­as_disponibles = 1-2 â†’ Full Body
+dÃ­as_disponibles = 3   â†’ Full Body o Upper/Lower
+dÃ­as_disponibles = 4-5 â†’ PPL o Upper/Lower
+dÃ­as_disponibles = 6+  â†’ PPL
+objetivo = ENDURANCE   â†’ Cardio puro (independiente de dÃ­as)
+nivel = BEGINNER       â†’ Full Body (independiente de dÃ­as)
 ```
 
 **Sobrecarga progresiva:**
-- Si el usuario completó 100% de series y reps objetivo en la sesión anterior → incremento de 2.5 kg (ejercicios de aislamiento) o 5 kg (ejercicios compuestos)
-- El incremento se aplica al inicio de la siguiente sesión
+- Si el usuario completÃ³ 100% de series y reps objetivo en la sesiÃ³n anterior â†’ incremento de 2.5 kg (ejercicios de aislamiento) o 5 kg (ejercicios compuestos)
+- El incremento se aplica al inicio de la siguiente sesiÃ³n
 
 ### 3.4 Nutrition_Service
 
-**Responsabilidad:** Registro nutricional, plan nutricional y búsqueda de alimentos.
+**Responsabilidad:** Registro nutricional, plan nutricional y bÃºsqueda de alimentos.
 
 ```
-GET  /nutrition/search?q=    → Búsqueda USDA
-POST /nutrition/barcode      → Búsqueda por código de barras
-POST /nutrition/photo        → Reconocimiento por foto (→ AI_Vision_Service)
-GET  /nutrition/daily/:date  → RegistroDiario
-POST /nutrition/daily/meals  → Agregar comida al día
-POST /nutrition/daily/meals/:id/foods → Agregar alimento a comida
-DELETE /nutrition/daily/meals/:id/foods/:foodId → Eliminar alimento
-GET  /nutrition/recipes      → Recetas guardadas
-POST /nutrition/recipes      → Crear receta
-GET  /nutrition/plan         → Plan nutricional activo
-POST /nutrition/plan/generate → Generar plan nutricional
+GET  /nutrition/search?q=    â†’ BÃºsqueda USDA
+POST /nutrition/barcode      â†’ BÃºsqueda por cÃ³digo de barras
+POST /nutrition/photo        â†’ Reconocimiento por foto (â†’ AI_Vision_Service)
+GET  /nutrition/daily/:date  â†’ RegistroDiario
+POST /nutrition/daily/meals  â†’ Agregar comida al dÃ­a
+POST /nutrition/daily/meals/:id/foods â†’ Agregar alimento a comida
+DELETE /nutrition/daily/meals/:id/foods/:foodId â†’ Eliminar alimento
+GET  /nutrition/recipes      â†’ Recetas guardadas
+POST /nutrition/recipes      â†’ Crear receta
+GET  /nutrition/plan         â†’ Plan nutricional activo
+POST /nutrition/plan/generate â†’ Generar plan nutricional
 ```
 
-**Cálculo de objetivos calóricos:**
+**CÃ¡lculo de objetivos calÃ³ricos:**
 
 ```
-LOSE_WEIGHT:  objetivo_kcal = TDEE − 400 (punto medio 300-500)
+LOSE_WEIGHT:  objetivo_kcal = TDEE âˆ’ 400 (punto medio 300-500)
 GAIN_MUSCLE:  objetivo_kcal = TDEE + 300 (punto medio 200-400)
 GAIN_WEIGHT:  objetivo_kcal = TDEE + 300
 MAINTENANCE:  objetivo_kcal = TDEE
 ENDURANCE:    objetivo_kcal = TDEE
 ```
 
-**Distribución de macros:**
+**DistribuciÃ³n de macros:**
 
 ```
 GAIN_MUSCLE:
-  proteínas = 1.9 g/kg × peso_kg  (punto medio 1.6-2.2)
-  grasas     = 0.25 × objetivo_kcal / 9
-  carbos     = (objetivo_kcal − proteínas×4 − grasas×9) / 4
+  proteÃ­nas = 1.9 g/kg Ã— peso_kg  (punto medio 1.6-2.2)
+  grasas     = 0.25 Ã— objetivo_kcal / 9
+  carbos     = (objetivo_kcal âˆ’ proteÃ­nasÃ—4 âˆ’ grasasÃ—9) / 4
 
 LOSE_WEIGHT:
-  proteínas = 1.4 g/kg × peso_kg  (punto medio 1.2-1.6)
-  grasas     = 0.25 × objetivo_kcal / 9
-  carbos     = (objetivo_kcal − proteínas×4 − grasas×9) / 4
+  proteÃ­nas = 1.4 g/kg Ã— peso_kg  (punto medio 1.2-1.6)
+  grasas     = 0.25 Ã— objetivo_kcal / 9
+  carbos     = (objetivo_kcal âˆ’ proteÃ­nasÃ—4 âˆ’ grasasÃ—9) / 4
 ```
 
 ### 3.5 Sleep_Service
 
 ```
-POST /sleep              → Registrar sueño manual
-GET  /sleep/history      → Historial de sueño
-GET  /sleep/latest       → Último registro de sueño
-POST /sleep/wearable     → Importar datos de wearable
+POST /sleep              â†’ Registrar sueÃ±o manual
+GET  /sleep/history      â†’ Historial de sueÃ±o
+GET  /sleep/latest       â†’ Ãšltimo registro de sueÃ±o
+POST /sleep/wearable     â†’ Importar datos de wearable
 ```
 
 ### 3.6 Analytics_Service
 
 ```
-GET /analytics/dashboard     → Resumen diario completo
-GET /analytics/charts/:type  → Datos para gráfico específico
-POST /analytics/export/pdf   → Generar reporte PDF mensual
+GET /analytics/dashboard     â†’ Resumen diario completo
+GET /analytics/charts/:type  â†’ Datos para grÃ¡fico especÃ­fico
+POST /analytics/export/pdf   â†’ Generar reporte PDF mensual
 ```
 
 ### 3.7 Wearable_Service
 
 ```
-POST /wearables/connect/:provider    → Conectar wearable
-DELETE /wearables/disconnect/:provider → Desconectar
-GET  /wearables/status               → Estado de conexiones
-POST /wearables/sync                 → Sincronización manual
-GET  /wearables/data                 → Datos importados
+POST /wearables/connect/:provider    â†’ Conectar wearable
+DELETE /wearables/disconnect/:provider â†’ Desconectar
+GET  /wearables/status               â†’ Estado de conexiones
+POST /wearables/sync                 â†’ SincronizaciÃ³n manual
+GET  /wearables/data                 â†’ Datos importados
 ```
 
 ### 3.8 Notification_Service
 
 ```
-GET  /notifications/settings         → Configuración actual
-PUT  /notifications/settings         → Actualizar configuración
-POST /notifications/calendar/connect → Conectar calendario
-GET  /notifications/history          → Historial de notificaciones
+GET  /notifications/settings         â†’ ConfiguraciÃ³n actual
+PUT  /notifications/settings         â†’ Actualizar configuraciÃ³n
+POST /notifications/calendar/connect â†’ Conectar calendario
+GET  /notifications/history          â†’ Historial de notificaciones
 ```
 
 ### 3.9 Sync_Service
 
 ```
-POST /sync/push          → Enviar Cola_Offline al servidor
-GET  /sync/pull          → Obtener cambios del servidor
-GET  /sync/status        → Estado de sincronización
+POST /sync/push          â†’ Enviar Cola_Offline al servidor
+GET  /sync/pull          â†’ Obtener cambios del servidor
+GET  /sync/status        â†’ Estado de sincronizaciÃ³n
 ```
 
 ---
 
 ## 4. Modelos de Datos
 
-### 4.1 Diagrama entidad-relación principal
+### 4.1 Diagrama entidad-relaciÃ³n principal
 
 ```mermaid
 erDiagram
@@ -393,7 +393,7 @@ erDiagram
     EXERCISES {
         uuid id PK
         string name
-        string[] muscle_groups
+        json muscle_groups
         string equipment_type
         string category
         string gif_url
@@ -407,7 +407,7 @@ erDiagram
         string plan_type
         boolean is_active
         timestamp generated_at
-        jsonb config
+        json config
     }
 
     WORKOUT_DAYS {
@@ -438,7 +438,7 @@ erDiagram
         int total_volume_kg
         int duration_seconds
         boolean is_active
-        jsonb offline_state
+        json offline_state
     }
 
     SERIE_LOGS {
@@ -538,7 +538,7 @@ erDiagram
         timestamp sleep_end
         int duration_minutes
         int quality_stars
-        jsonb phases
+        json phases
         string source
         timestamp recorded_at
     }
@@ -564,7 +564,7 @@ erDiagram
         int avg_heart_rate
         decimal vo2max
         int stress_level
-        jsonb raw_data
+        json raw_data
     }
 
     NOTIFICATION_SETTINGS {
@@ -573,7 +573,7 @@ erDiagram
         string notification_type
         boolean is_enabled
         time scheduled_time
-        jsonb config
+        json config
     }
 
     OFFLINE_QUEUE {
@@ -582,7 +582,7 @@ erDiagram
         string operation
         string entity_type
         uuid entity_id
-        jsonb payload
+        json payload
         timestamp client_timestamp
         boolean is_processed
         timestamp created_at
@@ -627,25 +627,28 @@ interface OfflineQueueItem {
   entityType: 'session' | 'serie_log' | 'food_log' | 'sleep_record' | 'weight';
   entityId: string;
   payload: Record<string, unknown>;
-  clientTimestamp: number;       // Unix ms — usado para "última escritura gana"
+  clientTimestamp: number;       // Unix ms â€” usado para "Ãºltima escritura gana"
   isProcessed: boolean;
 }
 ```
 
 ### 4.3 Esquema local SQLite / IndexedDB
 
-El cliente mantiene un subconjunto de las tablas del servidor para operación offline:
+El cliente mantiene un subconjunto de las tablas del servidor para operaciÃ³n offline:
 
-| Tabla local | Propósito |
+| Tabla local | PropÃ³sito |
 |---|---|
-| `users_cache` | Datos de sesión y perfil |
+| `users_cache` | Datos de sesiÃ³n y perfil |
 | `workout_plan_cache` | Plan activo + ejercicios |
 | `sessions_local` | Sesiones en curso o recientes |
 | `serie_logs_local` | Series registradas offline |
-| `foods_cache` | Base de datos USDA en caché (~50k alimentos frecuentes) |
-| `daily_records_local` | Registros nutricionales del día |
+| `foods_cache` | Base de datos USDA en cachÃ© (~50k alimentos frecuentes) |
+| `daily_records_local` | Registros nutricionales del dÃ­a |
 | `food_logs_local` | AlimentoLogs offline |
-| `sleep_records_local` | Registros de sueño offline |
+| `sleep_records_local` | Registros de sueÃ±o offline |
 | `offline_queue` | Cola de escrituras pendientes |
 
 ---
+
+
+
