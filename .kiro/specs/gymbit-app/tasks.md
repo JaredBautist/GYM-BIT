@@ -140,39 +140,39 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Testear recÃ¡lculo del plan al cambiar objetivo o peso
     - _Requisitos: 6.4, 7.4_
 
-- [ ] 7. Implementar AI_Vision_Service y Sleep_Service (backend)
-  - [ ] 7.1 Implementar reconocimiento de alimentos por foto
+- [x] 7. Implementar AI_Vision_Service y Sleep_Service (backend)
+  - [x] 7.1 Implementar reconocimiento de alimentos por foto
     - Crear `POST /nutrition/photo` que envÃ­a imagen a Google Gemini Vision
     - Parsear respuesta de Gemini para extraer alimentos identificados y porciones estimadas
     - Almacenar imagen en Object Storage (S3)
     - Manejar errores de API y timeout con respuesta de fallback
     - _Requisitos: 6.3_
 
-  - [ ] 7.2 Implementar Sleep_Service
+  - [x] 7.2 Implementar Sleep_Service
     - Crear `POST /sleep` para registro manual (inicio, fin, duraciÃ³n calculada, calidad 1â€“5 estrellas)
     - Crear `GET /sleep/history`, `GET /sleep/latest`
     - Crear `POST /sleep/wearable` para importar datos de fases (REM, profundo, ligero)
     - Implementar lÃ³gica de reducciÃ³n de intensidad: calidad â‰¤ 2 estrellas â†’ reducir 20% la carga del dÃ­a
     - _Requisitos: 8.1, 8.2, 8.3_
 
-  - [ ] 7.3 Escribir tests unitarios para Sleep_Service
+  - [x] 7.3 Escribir tests unitarios para Sleep_Service
     - Testear cÃ¡lculo de duraciÃ³n a partir de inicio y fin
     - Testear activaciÃ³n de reducciÃ³n de intensidad con calidad â‰¤ 2 estrellas
     - Testear que calidad > 2 estrellas no modifica el plan
     - _Requisitos: 8.1, 8.3_
 
-- [ ] 8. Checkpoint â€” Verificar que todos los tests pasen
+- [x] 8. Checkpoint â€” Verificar que todos los tests pasen
   - Asegurar que todos los tests de Workout_Engine, Nutrition_Service y Sleep_Service pasen. Consultar al usuario si surgen dudas.
 
-- [ ] 9. Implementar Analytics_Service, Wearable_Service y Notification_Service (backend)
-  - [ ] 9.1 Implementar Analytics_Service
+- [x] 9. Implementar Analytics_Service, Wearable_Service y Notification_Service (backend)
+  - [x] 9.1 Implementar Analytics_Service
     - Crear `GET /analytics/dashboard` con resumen diario (calorÃ­as restantes, prÃ³xima sesiÃ³n, sueÃ±o, mensaje motivacional)
     - Crear `GET /analytics/charts/:type` para cada tipo de grÃ¡fico (peso, calorÃ­as, heatmap, PRs, IMC, sueÃ±o, macros, recuperaciÃ³n)
     - Crear `POST /analytics/export/pdf` que genera reporte mensual en PDF (< 30 s)
     - Cachear resultados de dashboard en Redis con TTL de 2 minutos
     - _Requisitos: 9.1, 9.2, 9.3, 9.5, 14.3_
 
-  - [ ] 9.2 Implementar Wearable_Service
+  - [x] 9.2 Implementar Wearable_Service
     - Crear `POST /wearables/connect/:provider` para HealthKit, Garmin Connect API y Google Fit API
     - Crear `DELETE /wearables/disconnect/:provider`, `GET /wearables/status`
     - Crear `POST /wearables/sync` para sincronizaciÃ³n manual
@@ -181,7 +181,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Implementar lÃ³gica de reintentos: notificar al usuario solo tras 3 fallos consecutivos
     - _Requisitos: 10.1, 10.2, 10.3, 10.5_
 
-  - [ ] 9.3 Implementar Notification_Service
+  - [x] 9.3 Implementar Notification_Service
     - Crear `GET /notifications/settings`, `PUT /notifications/settings`
     - Implementar envÃ­o de notificaciones via Expo Notifications + Firebase FCM
     - Soportar todos los tipos: recordatorio entrenamiento, hidrataciÃ³n, comida, PR, logro, recuperaciÃ³n baja, pesaje
@@ -190,7 +190,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Implementar regla: si no hay comida registrada antes de las 14:00 â†’ enviar recordatorio
     - _Requisitos: 11.1, 11.2, 11.3, 11.4, 11.5_
 
-  - [ ] 9.4 Escribir tests unitarios para Analytics_Service
+  - [x] 9.4 Escribir tests unitarios para Analytics_Service
     - Testear cÃ¡lculo de calorÃ­as restantes del dÃ­a
     - Testear generaciÃ³n de datos para cada tipo de grÃ¡fico
     - _Requisitos: 9.1, 9.2_

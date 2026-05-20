@@ -11,8 +11,13 @@ import helmet from 'helmet';
 import { env } from './config/env.js';
 import { authenticate } from './middleware/auth.middleware.js';
 import { authRouter } from './routes/auth/index.js';
+import { analyticsRouter } from './routes/analytics/index.js';
+import { notificationRouter } from './routes/notifications/index.js';
 import { nutritionRouter } from './routes/nutrition/index.js';
+import { nutritionPhotoRouter } from './routes/nutrition/photo.js';
 import { profileRouter } from './routes/profile/index.js';
+import { sleepRouter } from './routes/sleep/index.js';
+import { wearableRouter } from './routes/wearables/index.js';
 import { workoutRouter, exercisesRouter } from './routes/workouts/index.js';
 
 export function createApp(): express.Application {
@@ -66,10 +71,11 @@ export function createApp(): express.Application {
   app.use('/profile', profileRouter);
   app.use('/workouts', workoutRouter);
   app.use('/nutrition', nutritionRouter);
-  // app.use('/sleep',      sleepRouter);
-  // app.use('/analytics',  analyticsRouter);
-  // app.use('/wearables',  wearableRouter);
-  // app.use('/notifications', notificationRouter);
+  app.use('/nutrition/photo', nutritionPhotoRouter);
+  app.use('/sleep', sleepRouter);
+  app.use('/analytics', analyticsRouter);
+  app.use('/wearables', wearableRouter);
+  app.use('/notifications', notificationRouter);
   // app.use('/sync',       syncRouter);
 
   // ── 404 handler ──────────────────────────────────────────────────────────
