@@ -9,7 +9,7 @@
     "start": "node dist/index.js",
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc --noEmit",
-    "test": "jest --passWithNoTests",
+    "test": "/home/balckyshadown/Escritorio/gymbit/node_modules/.bin/jest --config /home/balckyshadown/Escritorio/gymbit/packages/backend/jest.config.js --no-coverage",
     "migrate": "node dist/db/migrate.js",
     "migrate:rollback": "node dist/db/migrate.js rollback"
   },

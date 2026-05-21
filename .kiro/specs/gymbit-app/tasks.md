@@ -195,8 +195,8 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Testear generaciÃ³n de datos para cada tipo de grÃ¡fico
     - _Requisitos: 9.1, 9.2_
 
-- [ ] 10. Implementar Sync_Service y Cola_Offline (backend)
-  - [ ] 10.1 Implementar endpoints de sincronizaciÃ³n
+- [x] 10. Implementar Sync_Service y Cola_Offline (backend)
+  - [x] 10.1 Implementar endpoints de sincronizaciÃ³n
     - Crear `POST /sync/push` para recibir la Cola_Offline del cliente y aplicar escrituras
     - Crear `GET /sync/pull` para enviar cambios del servidor al cliente
     - Crear `GET /sync/status` para estado de sincronizaciÃ³n
@@ -204,41 +204,41 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Procesar Cola_Offline en menos de 60 segundos al recuperar conexiÃ³n
     - _Requisitos: 12.2, 12.3, 12.4_
 
-  - [ ] 10.2 Escribir tests de propiedad para resoluciÃ³n de conflictos
+  - [x] 10.2 Escribir tests de propiedad para resoluciÃ³n de conflictos
     - **Propiedad 12: Para dos escrituras en conflicto, siempre prevalece la de mayor clientTimestamp**
     - **Valida: Requisito 12.4**
     - **Propiedad 13: Procesar la Cola_Offline es idempotente (procesar dos veces produce el mismo resultado)**
     - **Valida: Requisito 12.3**
 
-- [ ] 11. Checkpoint â€” Verificar que todos los tests de backend pasen
+- [x] 11. Checkpoint â€” Verificar que todos los tests de backend pasen
   - Ejecutar suite completa de tests del backend. Asegurar cobertura de todos los servicios. Consultar al usuario si surgen dudas.
 
-- [ ] 12. Implementar almacenamiento local y lÃ³gica offline (cliente mÃ³vil)
-  - [ ] 12.1 Configurar SQLite con expo-sqlite en React Native
+- [x] 12. Implementar almacenamiento local y lÃ³gica offline (cliente mÃ³vil)
+  - [x] 12.1 Configurar SQLite con expo-sqlite en React Native
     - Crear esquema local con tablas: `users_cache`, `workout_plan_cache`, `sessions_local`, `serie_logs_local`, `foods_cache`, `daily_records_local`, `food_logs_local`, `sleep_records_local`, `offline_queue`
     - Implementar funciones CRUD para cada tabla local
     - Implementar persistencia de sesiÃ³n cifrada con AES-256 (expo-secure-store)
     - _Requisitos: 1.8, 12.1, 12.5, 13.1_
 
-  - [ ] 12.2 Implementar Cola_Offline en cliente mÃ³vil
+  - [x] 12.2 Implementar Cola_Offline en cliente mÃ³vil
     - Implementar `OfflineQueueItem` con estructura definida en secciÃ³n 4.2 del diseÃ±o
     - Interceptar escrituras cuando no hay conexiÃ³n y encolar en `offline_queue` local
     - Detectar recuperaciÃ³n de conexiÃ³n y disparar `POST /sync/push` automÃ¡ticamente
     - _Requisitos: 12.2, 12.3_
 
-  - [ ] 12.3 Escribir tests de propiedad para Cola_Offline en cliente
+  - [x] 12.3 Escribir tests de propiedad para Cola_Offline en cliente
     - **Propiedad 14: Toda escritura offline queda encolada con clientTimestamp antes de intentar sincronizar**
     - **Valida: Requisito 12.2**
 
-- [ ] 13. Implementar pantallas de autenticaciÃ³n y onboarding (cliente mÃ³vil)
-  - [ ] 13.1 Implementar pantallas de registro, login y recuperaciÃ³n de contraseÃ±a
+- [x] 13. Implementar pantallas de autenticaciÃ³n y onboarding (cliente mÃ³vil)
+  - [x] 13.1 Implementar pantallas de registro, login y recuperaciÃ³n de contraseÃ±a
     - Crear pantallas: `LoginScreen`, `RegisterScreen`, `ForgotPasswordScreen`
     - Integrar Auth0 con `expo-auth-session` para flujo OAuth 2.0 Google
     - Mostrar errores de validaciÃ³n inline y mensajes de bloqueo por intentos fallidos
     - Persistir sesiÃ³n localmente al autenticarse exitosamente
     - _Requisitos: 1.1, 1.2, 1.4, 1.5, 1.6, 1.8_
 
-  - [ ] 13.2 Implementar flujo de onboarding
+  - [x] 13.2 Implementar flujo de onboarding
     - Crear pantallas secuenciales: objetivo â†’ datos fÃ­sicos â†’ nivel de experiencia â†’ dÃ­as disponibles â†’ equipamiento
     - Guardar progreso parcial en SQLite para retomar si el usuario abandona
     - Al completar, disparar generaciÃ³n de plan de entrenamiento y plan nutricional
