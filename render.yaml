@@ -2,7 +2,6 @@ services:
   - type: web
     name: gymbit-backend
     env: node
-    rootDir: packages/backend
-    buildCommand: npm install && npm run build
-    startCommand: node scripts/setup.mjs && node dist/index.js
+    buildCommand: npm install && npm run build --workspace @gymbit/backend
+    startCommand: node packages/backend/scripts/setup.mjs && node packages/backend/dist/index.js
     plan: free
