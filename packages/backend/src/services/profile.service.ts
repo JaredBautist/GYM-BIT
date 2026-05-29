@@ -2,8 +2,8 @@
  * Profile_Service — gestión del perfil físico y cálculo de métricas.
  *
  * Responsabilidades:
- *  - CRUD del perfil de usuario (PROFILES)
- *  - Historial de peso (WEIGHT_HISTORY)
+ *  - CRUD del perfil de usuario (profiles)
+ *  - Historial de peso (weight_history)
  *  - Cálculo de IMC, TMB (Mifflin-St Jeor) y TDEE
  *
  * Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8
@@ -222,7 +222,7 @@ export function validateProfileFields(data: UpdateProfileInput): ValidationError
  */
 export async function getProfile(userId: string): Promise<ProfileRow | null> {
   const rows = await query<ProfileRow>(
-    'SELECT * FROM PROFILES WHERE user_id = ?',
+    'SELECT * FROM profiles WHERE user_id = ?',
     [userId],
   );
   return rows[0] ?? null;
@@ -286,7 +286,7 @@ export async function updateProfile(
   if (existing) {
     // UPDATE existing profile
     await query(
-      `UPDATE PROFILES
+      `UPDATE profiles
        SET birth_date = ?,
            gender = ?,
            height_cm = ?,
@@ -298,7 +298,7 @@ export async function updateProfile(
            bmi = ?,
            bmr = ?,
            tdee = ?,
-           updated_at = datetime('now')
+           updated_at = NOW()
        WHERE user_id = ?`,
       [
         merged.birth_date ?? null,
@@ -319,10 +319,10 @@ export async function updateProfile(
     // INSERT new profile
     const id = uuidv4();
     await query(
-      `INSERT INTO PROFILES
+      `INSERT INTO profiles
          (id, user_id, birth_date, gender, height_cm, weight_kg, goal,
           experience_level, available_days, medical_conditions, bmi, bmr, tdee, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         id,
         userId,
@@ -351,7 +351,7 @@ export async function updateProfile(
 
 /**
  * Record a new weight entry for the user.
- * Inserts into WEIGHT_HISTORY, updates PROFILES.weight_kg and recalculates metrics.
+ * Inserts into weight_history, updates profiles.weight_kg and recalculates metrics.
  * Requirement 3.3
  */
 export async function recordWeight(userId: string, weightKg: number): Promise<WeightHistoryRow> {
@@ -368,14 +368,14 @@ export async function recordWeight(userId: string, weightKg: number): Promise<We
   await withTransaction(async (conn) => {
     // Insert into weight history
     await conn.execute(
-      `INSERT INTO WEIGHT_HISTORY (id, user_id, weight_kg, recorded_at)
-       VALUES (?, ?, ?, datetime('now'))`,
+      `INSERT INTO weight_history (id, user_id, weight_kg, recorded_at)
+       VALUES (?, ?, ?, NOW())`,
       [id, userId, weightKg],
     );
 
     // Update current weight in profile
     await conn.execute(
-      `UPDATE PROFILES SET weight_kg = ?, updated_at = datetime('now') WHERE user_id = ?`,
+      `UPDATE profiles SET weight_kg = ?, updated_at = NOW() WHERE user_id = ?`,
       [weightKg, userId],
     );
   });
@@ -390,14 +390,14 @@ export async function recordWeight(userId: string, weightKg: number): Promise<We
     const tdee = calculateTDEE(bmr, activityLevel);
 
     await query(
-      `UPDATE PROFILES SET bmi = ?, bmr = ?, tdee = ?, updated_at = datetime('now') WHERE user_id = ?`,
+      `UPDATE profiles SET bmi = ?, bmr = ?, tdee = ?, updated_at = NOW() WHERE user_id = ?`,
       [bmi, bmr, tdee, userId],
     );
   }
 
   // Return the newly created weight history entry
   const rows = await query<WeightHistoryRow>(
-    'SELECT * FROM WEIGHT_HISTORY WHERE id = ?',
+    'SELECT * FROM weight_history WHERE id = ?',
     [id],
   );
   return rows[0]!;
@@ -409,7 +409,7 @@ export async function recordWeight(userId: string, weightKg: number): Promise<We
  */
 export async function getWeightHistory(userId: string): Promise<WeightHistoryRow[]> {
   return query<WeightHistoryRow>(
-    'SELECT * FROM WEIGHT_HISTORY WHERE user_id = ? ORDER BY recorded_at DESC',
+    'SELECT * FROM weight_history WHERE user_id = ? ORDER BY recorded_at DESC',
     [userId],
   );
 }
