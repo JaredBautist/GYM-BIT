@@ -27,7 +27,7 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 
-import { saveSession } from '../../db/repositories/user.repository';
+import { saveSession, upsertUser } from '../../db/repositories/user.repository';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -68,8 +68,11 @@ export default function LoginScreen(): React.JSX.Element {
     setLoading(true);
     setError(null);
 
+    const apiUrl = process.env['EXPO_PUBLIC_API_URL'];
+    console.log('[LoginScreen] API URL:', apiUrl);
+
     try {
-      const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/login`, {
+      const response = await fetch(`${apiUrl}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email.trim(), password: form.password }),
@@ -98,10 +101,32 @@ export default function LoginScreen(): React.JSX.Element {
       if (data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
         // Persistir sesión localmente (AES-256 via expo-secure-store) — Req 1.8
         await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
+        // Guardar datos básicos del usuario en caché local
+        await upsertUser({
+          id: data.user.id,
+          email: data.user.email ?? '',
+          name: data.user.name ?? '',
+          auth0Id: null,
+          isActive: 1,
+          emailVerified: data.user.emailVerified ? 1 : 0,
+          birthDate: null,
+          gender: null,
+          heightCm: null,
+          weightKg: null,
+          goal: null,
+          experienceLevel: null,
+          availableDays: null,
+          medicalConditions: null,
+          bmi: null,
+          bmr: null,
+          tdee: null,
+        }).catch(() => {});
         router.replace('/');
       }
-    } catch {
-      setError('Error de conexión. Verifica tu internet e intenta de nuevo.');
+    } catch (err) {
+      console.log('[LoginScreen] Error:', err instanceof Error ? err.message : err);
+      console.log('[LoginScreen] Stack:', err instanceof Error ? err.stack : '');
+      setError(`Error: ${err instanceof Error ? err.message : 'desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -136,7 +161,9 @@ export default function LoginScreen(): React.JSX.Element {
             body: JSON.stringify({ code, clientId: GOOGLE_WEB_CLIENT_ID, redirectUri }),
           });
 
-          const data = (await response.json()) as {
+      const rawText = await response.text();
+      console.log('[LoginScreen] Response status:', response.status, 'Body:', rawText.slice(0, 200));
+      const data = JSON.parse(rawText) as {
             tokens?: { accessToken: string; refreshToken: string };
             user?: { id: string };
             error?: string;
@@ -144,6 +171,25 @@ export default function LoginScreen(): React.JSX.Element {
 
           if (response.ok && data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
             await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
+            await upsertUser({
+              id: data.user.id,
+              email: (data.user as { email?: string }).email ?? '',
+              name: (data.user as { name?: string }).name ?? '',
+              auth0Id: null,
+              isActive: 1,
+              emailVerified: 0,
+              birthDate: null,
+              gender: null,
+              heightCm: null,
+              weightKg: null,
+              goal: null,
+              experienceLevel: null,
+              availableDays: null,
+              medicalConditions: null,
+              bmi: null,
+              bmr: null,
+              tdee: null,
+            }).catch(() => {});
             router.replace('/');
           } else {
             setError(data.error ?? 'Error al autenticar con Google.');

@@ -40,11 +40,12 @@ interface OnboardingData {
   equipment: Equipment[];
 }
 
-type OnboardingStep = 'goal' | 'physical' | 'experience' | 'days' | 'equipment';
+type OnboardingStep = 'welcome' | 'goal' | 'physical' | 'experience' | 'days' | 'equipment';
 
-const STEPS: OnboardingStep[] = ['goal', 'physical', 'experience', 'days', 'equipment'];
+const STEPS: OnboardingStep[] = ['welcome', 'goal', 'physical', 'experience', 'days', 'equipment'];
 
 const STEP_TITLES: Record<OnboardingStep, string> = {
+  welcome: '¡Bienvenido!',
   goal: '¿Cuál es tu objetivo principal?',
   physical: 'Tus datos físicos',
   experience: '¿Cuál es tu nivel de experiencia?',
@@ -81,7 +82,8 @@ const ONBOARDING_CACHE_KEY = 'onboarding_progress';
 export default function OnboardingScreen(): React.JSX.Element {
   const router = useRouter();
 
-  const [currentStep, setCurrentStep] = useState<OnboardingStep>('goal');
+  const [userName, setUserName] = useState('');
+  const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [data, setData] = useState<OnboardingData>({
     goal: null,
     heightCm: '',
@@ -98,7 +100,20 @@ export default function OnboardingScreen(): React.JSX.Element {
   // Cargar progreso parcial guardado (Req 2.4)
   useEffect(() => {
     loadSavedProgress();
+    loadUserName();
   }, []);
+
+  async function loadUserName(): Promise<void> {
+    try {
+      const session = await getSession();
+      if (session) {
+        const user = await getUserById(session.userId);
+        if (user?.name) setUserName(user.name);
+      }
+    } catch {
+      // Silencio
+    }
+  }
 
   async function loadSavedProgress(): Promise<void> {
     try {
@@ -108,7 +123,7 @@ export default function OnboardingScreen(): React.JSX.Element {
       );
       if (rows.length > 0) {
         const saved = JSON.parse(rows[0]!.value) as Partial<OnboardingData & { step: OnboardingStep }>;
-        if (saved.step) setCurrentStep(saved.step);
+        if (saved.step && saved.step !== 'welcome') setCurrentStep(saved.step);
         setData((d) => ({ ...d, ...saved }));
       }
     } catch {
@@ -188,8 +203,14 @@ export default function OnboardingScreen(): React.JSX.Element {
       });
 
       if (!profileResponse.ok) {
-        const err = (await profileResponse.json()) as { message?: string };
-        setError(err.message ?? 'Error al guardar el perfil.');
+        const body = await profileResponse.text();
+        console.log('[Onboarding] Profile PUT error:', profileResponse.status, body);
+        try {
+          const err = JSON.parse(body) as { message?: string; error?: string };
+          setError(err.message ?? err.error ?? 'Error al guardar el perfil.');
+        } catch {
+          setError(`Error al guardar el perfil (${profileResponse.status}): ${body.slice(0, 100)}`);
+        }
         return;
       }
 
@@ -247,6 +268,18 @@ export default function OnboardingScreen(): React.JSX.Element {
   }
 
   // ── Step renderers ──────────────────────────────────────────────────────────
+
+  function renderWelcomeStep(): React.JSX.Element {
+    return (
+      <View style={styles.welcomeContainer}>
+        <Text style={styles.welcomeTitle}>BIENVENIDO</Text>
+        {userName ? <Text style={styles.welcomeName}>{userName}</Text> : null}
+        <Text style={styles.welcomeSubtitle}>
+          Vamos a configurar tu perfil para personalizar tu experiencia.
+        </Text>
+      </View>
+    );
+  }
 
   function renderGoalStep(): React.JSX.Element {
     return (
@@ -383,6 +416,7 @@ export default function OnboardingScreen(): React.JSX.Element {
 
   function canProceed(): boolean {
     switch (currentStep) {
+      case 'welcome': return true;
       case 'goal': return data.goal !== null;
       case 'physical': return data.heightCm !== '' && data.weightKg !== '' && data.birthDate !== '' && data.gender !== null;
       case 'experience': return data.experienceLevel !== null;
@@ -417,6 +451,7 @@ export default function OnboardingScreen(): React.JSX.Element {
           </View>
         )}
 
+        {currentStep === 'welcome' && renderWelcomeStep()}
         {currentStep === 'goal' && renderGoalStep()}
         {currentStep === 'physical' && renderPhysicalStep()}
         {currentStep === 'experience' && renderExperienceStep()}
@@ -504,4 +539,8 @@ const styles = StyleSheet.create({
   nextBtn: { flex: 1, backgroundColor: '#6366F1', borderRadius: 8, paddingVertical: 14, alignItems: 'center', minHeight: 48 },
   nextBtnDisabled: { opacity: 0.4 },
   nextBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '600' },
+  welcomeContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 40 },
+  welcomeTitle: { fontSize: 32, fontWeight: '800', color: '#6366F1', marginBottom: 8 },
+  welcomeName: { fontSize: 24, fontWeight: '600', color: '#F9FAFB', marginBottom: 16 },
+  welcomeSubtitle: { fontSize: 16, color: '#9CA3AF', textAlign: 'center', lineHeight: 24 },
 });
