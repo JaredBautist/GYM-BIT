@@ -1,9 +1,3 @@
-/**
- * Environment variable validation using Zod + dotenv.
- * Fails fast at startup if required variables are missing or malformed.
- * Requirement 13.1, 13.2
- */
-
 import 'dotenv/config';
 
 import { z } from 'zod';
@@ -12,11 +6,12 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
 
-  // MySQL
-  DATABASE_URL: z.string().url('DATABASE_URL must be a valid MySQL connection URL'),
+  // SQLite database path
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL must be a path to the SQLite database file'),
 
-  // Redis
-  REDIS_URL: z.string().url('REDIS_URL must be a valid Redis connection URL'),
+  // Google OAuth
+  GOOGLE_CLIENT_ID: z.string().min(1),
+  GOOGLE_CLIENT_SECRET: z.string().min(1),
 
   // Auth0
   AUTH0_DOMAIN: z.string().min(1),

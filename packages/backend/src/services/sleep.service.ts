@@ -125,7 +125,7 @@ export async function createSleepRecord(
   await query(
     `INSERT INTO sleep_records
        (id, user_id, sleep_start, sleep_end, duration_minutes, quality_stars, phases, source, recorded_at)
-     VALUES (?, ?, ?, ?, ?, ?, NULL, 'MANUAL', NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, NULL, 'MANUAL', datetime('now'))`,
     [id, userId, startDate, endDate, durationMinutes, qualityStars],
   );
 
@@ -172,7 +172,7 @@ export async function importWearableSleep(
   await query(
     `INSERT INTO sleep_records
        (id, user_id, sleep_start, sleep_end, duration_minutes, quality_stars, phases, source, recorded_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'WEARABLE', NOW())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'WEARABLE', datetime('now'))`,
     [id, userId, startDate, endDate, durationMinutes, qualityStars, phases ? JSON.stringify(phases) : null],
   );
 
@@ -234,7 +234,7 @@ export async function applyIntensityReductionIfNeeded(
   const rows = await query<SleepRecordRow>(
     `SELECT * FROM sleep_records
      WHERE user_id = ?
-       AND sleep_start >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+        AND sleep_start >= datetime('now', '-24 hours')
      ORDER BY sleep_start DESC
      LIMIT 1`,
     [userId],

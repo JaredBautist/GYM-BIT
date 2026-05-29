@@ -210,7 +210,7 @@ async function selectExercisesForDay(
     sql = `
       SELECT * FROM EXERCISES
       WHERE (
-        LOWER(JSON_UNQUOTE(JSON_EXTRACT(muscle_groups, '$[0]'))) LIKE ?
+        LOWER(json_extract(muscle_groups, '$[0]')) LIKE ?
         OR LOWER(category) LIKE ?
         OR ? = 'full body'
         OR ? = 'cardio'
@@ -224,7 +224,7 @@ async function selectExercisesForDay(
     sql = `
       SELECT * FROM EXERCISES
       WHERE (
-        LOWER(JSON_UNQUOTE(JSON_EXTRACT(muscle_groups, '$[0]'))) LIKE ?
+        LOWER(json_extract(muscle_groups, '$[0]')) LIKE ?
         OR LOWER(category) LIKE ?
         OR ? = 'full body'
         OR ? = 'cardio'
@@ -242,7 +242,7 @@ async function selectExercisesForDay(
     const fallback = await query<ExerciseRow>(
       `SELECT * FROM EXERCISES
        WHERE LOWER(equipment_type) = 'bodyweight'
-       ORDER BY RAND()
+       ORDER BY RANDOM()
        LIMIT 6`,
     );
     return fallback;
@@ -264,7 +264,7 @@ export async function getExercises(filters?: ExerciseFilters): Promise<ExerciseR
 
   if (filters?.muscleGroup) {
     conditions.push(
-      `JSON_SEARCH(LOWER(muscle_groups), 'one', ?) IS NOT NULL`,
+        `INSTR(LOWER(json_extract(muscle_groups, '$')), ?) > 0`,
     );
     params.push(`%${filters.muscleGroup.toLowerCase()}%`);
   }
@@ -313,7 +313,7 @@ export async function generateWorkoutPlan(
     // 2. Insert new plan
     await conn.execute(
       `INSERT INTO WORKOUT_PLANS (id, user_id, plan_type, is_active, generated_at, config)
-       VALUES (?, ?, ?, TRUE, NOW(), ?)`,
+       VALUES (?, ?, ?, TRUE, datetime('now'), ?)`,
       [
         planId,
         userId,
@@ -536,7 +536,7 @@ export async function startSession(
 
   await query(
     `INSERT INTO SESSIONS (id, user_id, plan_id, started_at, is_active)
-     VALUES (?, ?, ?, NOW(), TRUE)`,
+     VALUES (?, ?, ?, datetime('now'), TRUE)`,
     [sessionId, userId, planId ?? null],
   );
 
@@ -609,8 +609,8 @@ export async function updateSession(
 /**
  * Complete a session:
  *  - Calculate total_volume_kg = SUM(weight_kg × reps_done) from SERIE_LOGS
- *  - Calculate duration_seconds = TIMESTAMPDIFF(SECOND, started_at, NOW())
- *  - Set is_active = false and completed_at = NOW()
+ *  - Calculate duration_seconds = TIMESTAMPDIFF(SECOND, started_at, datetime('now'))
+ *  - Set is_active = false and completed_at = datetime('now')
  *
  * Requirements: 5.4
  */
@@ -641,8 +641,8 @@ export async function completeSession(
   // Update session: set completed_at, duration, volume, is_active = false
   await query(
     `UPDATE SESSIONS
-     SET completed_at = NOW(),
-         duration_seconds = TIMESTAMPDIFF(SECOND, started_at, NOW()),
+     SET completed_at = datetime('now'),
+         duration_seconds = CAST((julianday(datetime('now')) - julianday(started_at)) * 86400 AS INTEGER),
          total_volume_kg = ?,
          is_active = FALSE
      WHERE id = ? AND user_id = ?`,
@@ -681,7 +681,7 @@ export async function logSerie(
   // Insert the serie log (is_pr defaults to false)
   await query(
     `INSERT INTO SERIE_LOGS (id, session_id, exercise_id, set_number, weight_kg, reps_done, logged_at, is_pr)
-     VALUES (?, ?, ?, ?, ?, ?, NOW(), FALSE)`,
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'), FALSE)`,
     [serieId, sessionId, exerciseId, setNumber, weightKg, repsDone],
   );
 
@@ -708,14 +708,14 @@ export async function logSerie(
     if (currentPr) {
       await query(
         `UPDATE PERSONAL_RECORDS
-         SET weight_kg = ?, reps = ?, achieved_at = NOW()
+         SET weight_kg = ?, reps = ?, achieved_at = datetime('now')
          WHERE user_id = ? AND exercise_id = ?`,
         [weightKg, repsDone, userId, exerciseId],
       );
     } else {
       await query(
         `INSERT INTO PERSONAL_RECORDS (id, user_id, exercise_id, weight_kg, reps, achieved_at)
-         VALUES (?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, datetime('now'))`,
         [uuidv4(), userId, exerciseId, weightKg, repsDone],
       );
     }

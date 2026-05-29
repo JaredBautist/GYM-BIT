@@ -230,7 +230,7 @@ export async function importWearableData(
     // Reset consecutive failures and update last_sync_at
     await conn.execute(
       `UPDATE wearable_connections
-       SET last_sync_at = NOW(), consecutive_failures = 0
+       SET last_sync_at = datetime('now'), consecutive_failures = 0
        WHERE user_id = ? AND provider = ?`,
       [userId, provider],
     );

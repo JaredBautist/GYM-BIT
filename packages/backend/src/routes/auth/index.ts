@@ -1,33 +1,17 @@
-/**
- * Auth router — mounts all /auth/* endpoints.
- *
- * POST /auth/register          — local email/password registration
- * POST /auth/login             — local email/password login
- * POST /auth/callback          — OAuth 2.0 Google callback (via Auth0)
- * POST /auth/refresh           — rotate refresh token
- * POST /auth/logout            — revoke refresh token
- * POST /auth/forgot-password   — request password reset link
- * POST /auth/reset-password    — apply new password with reset token
- * GET  /auth/verify-email/:token — verify email address
- *
- * Requirements: 1.1, 1.2, 1.3, 1.5, 1.6, 1.9, 1.10, 13.6
- */
-
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import rateLimit from 'express-rate-limit';
-import { RedisStore } from 'rate-limit-redis';
 import { z } from 'zod';
 
 import {
   registerLocal,
   loginLocal,
   handleOAuthCallback,
+  handleGoogleAuth,
   refreshAccessToken,
   logout,
   forgotPassword,
   resetPassword,
   verifyEmail,
-  getRedis,
 } from '../../services/auth.service.js';
 
 export const authRouter = Router();
@@ -54,6 +38,12 @@ const callbackSchema = z.object({
   redirectUri: z.string().url(),
 });
 
+const googleAuthSchema = z.object({
+  code: z.string().min(1),
+  clientId: z.string().min(1),
+  redirectUri: z.string().min(1),
+});
+
 const refreshSchema = z.object({
   refreshToken: z.string().min(1),
 });
@@ -76,84 +66,24 @@ const resetPasswordSchema = z.object({
 });
 
 // ── Rate limiters (Requirement 1.6) ──────────────────────────────────────────
-// Uses Redis store for distributed rate limiting across multiple instances.
-// Falls back to in-memory store if Redis is unavailable at startup.
 
-/**
- * Build rate limiters lazily so the Redis client is already connected.
- * Called once on first request to /auth/*.
- */
-let _authRateLimiter: ReturnType<typeof rateLimit> | null = null;
-let _loginRateLimiter: ReturnType<typeof rateLimit> | null = null;
+const _authRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+});
 
-async function buildRateLimiters(): Promise<void> {
-  if (_authRateLimiter) return;
+const _loginRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts, please try again later.' },
+});
 
-  try {
-    const redis = await getRedis();
-
-    // General limiter: 30 requests / 15 min per IP across all /auth/* routes
-    _authRateLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 30,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { error: 'Too many requests, please try again later.' },
-      store: new RedisStore({
-        sendCommand: (...args: string[]) => redis.sendCommand(args),
-        prefix: 'rl:auth:',
-      }),
-    });
-
-    // Stricter limiter: 10 requests / 15 min per IP for login/register/forgot-password
-    _loginRateLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 10,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { error: 'Too many login attempts, please try again later.' },
-      store: new RedisStore({
-        sendCommand: (...args: string[]) => redis.sendCommand(args),
-        prefix: 'rl:login:',
-      }),
-    });
-  } catch (err) {
-    // Redis unavailable — fall back to in-memory store (single-instance only)
-    console.warn('[Auth] Redis unavailable for rate limiting, falling back to in-memory store:', err);
-
-    _authRateLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 30,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { error: 'Too many requests, please try again later.' },
-    });
-
-    _loginRateLimiter = rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 10,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: { error: 'Too many login attempts, please try again later.' },
-    });
-  }
-}
-
-/** Middleware that initialises rate limiters on first use then delegates. */
-function lazyAuthRateLimit(req: Request, res: Response, next: NextFunction): void {
-  buildRateLimiters()
-    .then(() => _authRateLimiter!(req, res, next))
-    .catch(next);
-}
-
-function lazyLoginRateLimit(req: Request, res: Response, next: NextFunction): void {
-  buildRateLimiters()
-    .then(() => _loginRateLimiter!(req, res, next))
-    .catch(next);
-}
-
-// Apply general rate limiter to all /auth/* routes
-authRouter.use(lazyAuthRateLimit);
+authRouter.use(_authRateLimiter);
 
 // ── Helper: wrap async route handlers ────────────────────────────────────────
 
@@ -216,7 +146,7 @@ function errorResponse(res: Response, err: unknown): void {
 
 authRouter.post(
   '/register',
-  lazyLoginRateLimit,
+  _loginRateLimiter,
   asyncHandler(async (req, res) => {
     const parsed = registerSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -226,12 +156,9 @@ authRouter.post(
 
     try {
       const result = await registerLocal(parsed.data);
-      // In production, the verificationToken would be emailed, not returned in the response.
-      // We include it here so integration tests / email services can pick it up.
       res.status(201).json({
         message: 'Registration successful. Please verify your email.',
         userId: result.userId,
-        // Only expose the token in non-production environments for testing convenience
         ...(process.env['NODE_ENV'] !== 'production' && {
           verificationToken: result.verificationToken,
         }),
@@ -246,7 +173,7 @@ authRouter.post(
 
 authRouter.post(
   '/login',
-  lazyLoginRateLimit,
+  _loginRateLimiter,
   asyncHandler(async (req, res) => {
     const parsed = loginSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -276,6 +203,26 @@ authRouter.post(
 
     try {
       const result = await handleOAuthCallback(parsed.data);
+      res.status(200).json(result);
+    } catch (err) {
+      errorResponse(res, err);
+    }
+  }),
+);
+
+// ── POST /auth/google ─────────────────────────────────────────────────────────
+
+authRouter.post(
+  '/google',
+  asyncHandler(async (req, res) => {
+    const parsed = googleAuthSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
+      return;
+    }
+
+    try {
+      const result = await handleGoogleAuth(parsed.data);
       res.status(200).json(result);
     } catch (err) {
       errorResponse(res, err);
@@ -327,7 +274,7 @@ authRouter.post(
 
 authRouter.post(
   '/forgot-password',
-  lazyLoginRateLimit,
+  _loginRateLimiter,
   asyncHandler(async (req, res) => {
     const parsed = forgotPasswordSchema.safeParse(req.body);
     if (!parsed.success) {
@@ -337,10 +284,8 @@ authRouter.post(
 
     try {
       const result = await forgotPassword(parsed.data.email);
-      // Always return 200 to avoid user enumeration (Requirement 1.5)
       res.status(200).json({
         message: 'If that email is registered, a reset link has been sent.',
-        // Only expose the token in non-production environments for testing convenience
         ...(process.env['NODE_ENV'] !== 'production' && result && {
           resetToken: result.resetToken,
         }),

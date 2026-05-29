@@ -274,8 +274,8 @@ async function upsertFood(food: Omit<FoodRow, 'id'>): Promise<FoodRow> {
 export async function searchFoods(queryStr: string): Promise<FoodRow[]> {
   // First check local cache
   const cached = await query<FoodRow>(
-    `SELECT * FROM foods WHERE MATCH(name) AGAINST(? IN BOOLEAN MODE) LIMIT 25`,
-    [queryStr + '*'],
+    `SELECT * FROM foods WHERE name LIKE ? LIMIT 25`,
+    [`%${queryStr}%`],
   );
 
   if (cached.length > 0) {
@@ -436,7 +436,7 @@ export async function addMeal(
   const mealId = uuidv4();
   await query(
     `INSERT INTO meals (id, daily_record_id, meal_type, logged_at)
-     VALUES (?, ?, ?, NOW())`,
+     VALUES (?, ?, ?, datetime('now'))`,
     [mealId, record.id, mealType],
   );
 
@@ -653,7 +653,7 @@ export async function createRecipe(
   await withTransaction(async (conn) => {
     await conn.execute(
       `INSERT INTO recipes (id, user_id, name, total_calories, total_protein, total_carbs, total_fat, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       [recipeId, userId, name, totalCalories, totalProtein, totalCarbs, totalFat],
     );
 
@@ -725,7 +725,7 @@ export async function generateNutritionPlan(userId: string): Promise<NutritionPl
     // Insert new plan
     await conn.execute(
       `INSERT INTO nutrition_plans (id, user_id, calorie_goal, protein_goal_g, carbs_goal_g, fat_goal_g, is_active, generated_at)
-       VALUES (?, ?, ?, ?, ?, ?, TRUE, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, TRUE, datetime('now'))`,
       [planId, userId, caloricGoal, macros.proteinG, macros.carbsG, macros.fatG],
     );
   });

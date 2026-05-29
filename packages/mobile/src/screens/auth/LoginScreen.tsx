@@ -31,6 +31,8 @@ import { saveSession } from '../../db/repositories/user.repository';
 
 WebBrowser.maybeCompleteAuthSession();
 
+const GOOGLE_WEB_CLIENT_ID = '455748712795-o4ebtpv3occlu28o7rkge9ve8ptva77q.apps.googleusercontent.com';
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 interface LoginForm {
@@ -50,6 +52,7 @@ export default function LoginScreen(): React.JSX.Element {
 
   const [form, setForm] = useState<LoginForm>({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockMinutes, setBlockMinutes] = useState(0);
@@ -107,19 +110,18 @@ export default function LoginScreen(): React.JSX.Element {
   // ── Google OAuth login ──────────────────────────────────────────────────────
 
   async function handleGoogleLogin(): Promise<void> {
-    setLoading(true);
+    setGoogleLoading(true);
     setError(null);
 
     try {
-      const redirectUri = AuthSession.makeRedirectUri({ scheme: 'gymbit' });
-
+      const redirectUri = AuthSession.makeRedirectUri({ useProxy: true });
       const authUrl =
-        `https://${process.env['EXPO_PUBLIC_AUTH0_DOMAIN']}/authorize?` +
+        `https://accounts.google.com/o/oauth2/v2/auth?` +
         `response_type=code` +
-        `&client_id=${process.env['EXPO_PUBLIC_AUTH0_CLIENT_ID']}` +
+        `&client_id=${GOOGLE_WEB_CLIENT_ID}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-        `&scope=openid%20profile%20email` +
-        `&connection=google-oauth2`;
+        `&scope=openid%20email%20profile` +
+        `&access_type=offline`;
 
       const result = await WebBrowser.openAuthSessionAsync(authUrl, redirectUri);
 
@@ -128,31 +130,32 @@ export default function LoginScreen(): React.JSX.Element {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/callback`, {
+          const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/google`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code, redirectUri }),
+            body: JSON.stringify({ code, clientId: GOOGLE_WEB_CLIENT_ID, redirectUri }),
           });
 
           const data = (await response.json()) as {
-            accessToken?: string;
-            refreshToken?: string;
+            tokens?: { accessToken: string; refreshToken: string };
             user?: { id: string };
-            message?: string;
+            error?: string;
           };
 
-          if (response.ok && data.accessToken && data.refreshToken && data.user?.id) {
-            await saveSession(data.user.id, data.accessToken, data.refreshToken);
+          if (response.ok && data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
+            await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
             router.replace('/(tabs)');
           } else {
-            setError(data.message ?? 'Error al autenticar con Google.');
+            setError(data.error ?? 'Error al autenticar con Google.');
           }
+        } else {
+          setError('No se recibió respuesta de Google.');
         }
       }
     } catch {
       setError('Error al iniciar sesión con Google.');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   }
 
@@ -259,13 +262,17 @@ export default function LoginScreen(): React.JSX.Element {
 
         {/* Google button */}
         <TouchableOpacity
-          style={[styles.googleButton, loading && styles.buttonDisabled]}
+          style={[styles.googleButton, (loading || googleLoading) && styles.buttonDisabled]}
           onPress={handleGoogleLogin}
-          disabled={loading}
+          disabled={loading || googleLoading}
           accessibilityRole="button"
           accessibilityLabel="Continuar con Google"
         >
-          <Text style={styles.googleButtonText}>Continuar con Google</Text>
+          {googleLoading ? (
+            <ActivityIndicator color="#F9FAFB" />
+          ) : (
+            <Text style={styles.googleButtonText}>Continuar con Google</Text>
+          )}
         </TouchableOpacity>
 
         {/* Register link */}

@@ -298,7 +298,7 @@ export async function updateProfile(
            bmi = ?,
            bmr = ?,
            tdee = ?,
-           updated_at = NOW()
+           updated_at = datetime('now')
        WHERE user_id = ?`,
       [
         merged.birth_date ?? null,
@@ -322,7 +322,7 @@ export async function updateProfile(
       `INSERT INTO PROFILES
          (id, user_id, birth_date, gender, height_cm, weight_kg, goal,
           experience_level, available_days, medical_conditions, bmi, bmr, tdee, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
       [
         id,
         userId,
@@ -369,13 +369,13 @@ export async function recordWeight(userId: string, weightKg: number): Promise<We
     // Insert into weight history
     await conn.execute(
       `INSERT INTO WEIGHT_HISTORY (id, user_id, weight_kg, recorded_at)
-       VALUES (?, ?, ?, NOW())`,
+       VALUES (?, ?, ?, datetime('now'))`,
       [id, userId, weightKg],
     );
 
     // Update current weight in profile
     await conn.execute(
-      'UPDATE PROFILES SET weight_kg = ?, updated_at = NOW() WHERE user_id = ?',
+      `UPDATE PROFILES SET weight_kg = ?, updated_at = datetime('now') WHERE user_id = ?`,
       [weightKg, userId],
     );
   });
@@ -390,7 +390,7 @@ export async function recordWeight(userId: string, weightKg: number): Promise<We
     const tdee = calculateTDEE(bmr, activityLevel);
 
     await query(
-      'UPDATE PROFILES SET bmi = ?, bmr = ?, tdee = ?, updated_at = NOW() WHERE user_id = ?',
+      `UPDATE PROFILES SET bmi = ?, bmr = ?, tdee = ?, updated_at = datetime('now') WHERE user_id = ?`,
       [bmi, bmr, tdee, userId],
     );
   }

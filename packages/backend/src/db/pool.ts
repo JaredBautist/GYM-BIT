@@ -1,49 +1,64 @@
-/**
- * MySQL connection pool using mysql2/promise.
- * Requirement 13.1 — all data at rest encrypted with AES-256 (handled at app layer).
- * Requirement 13.2 — HTTPS/TLS enforced at the Express layer; DB connections use SSL in production.
- */
+import path from 'node:path';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-import mysql from 'mysql2/promise';
+import Database from 'better-sqlite3';
 
 import { env } from '../config/env.js';
 
-export const pool = mysql.createPool({
-  uri: env.DATABASE_URL,
-  ...(env.NODE_ENV === 'production' && { ssl: { rejectUnauthorized: true } }),
-  connectionLimit: 20,
-  waitForConnections: true,
-  queueLimit: 0,
-  timezone: 'Z', // store/retrieve all datetimes as UTC
-});
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-pool.on('connection', () => {
-  // connection acquired — no-op, kept for future instrumentation
-});
+// Resolve DB path — if relative, resolve from backend package root
+const dbPath = path.isAbsolute(env.DATABASE_URL)
+  ? env.DATABASE_URL
+  : path.resolve(__dirname, '..', '..', env.DATABASE_URL);
 
-/** Run a query with automatic connection management. */
+// Ensure the directory exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
+const db = new Database(dbPath);
+
+// Performance & safety pragmas
+db.pragma('journal_mode = WAL');
+db.pragma('foreign_keys = ON');
+db.pragma('busy_timeout = 5000');
+
+export { db };
+
+/** Run a query and return all matching rows. */
 export async function query<T extends object = Record<string, unknown>>(
   text: string,
   params?: unknown[],
 ): Promise<T[]> {
-  const [rows] = await pool.execute<mysql.RowDataPacket[]>(text, params);
-  return rows as unknown as T[];
+  const stmt = db.prepare(text);
+  const upper = text.trim().toUpperCase();
+  if (upper.startsWith('SELECT') || upper.startsWith('WITH') || upper.startsWith('PRAGMA')) {
+    const rows = (params ? stmt.all(...params) : stmt.all()) as T[];
+    return rows;
+  }
+  stmt.run(...(params ?? []));
+  return [] as T[];
 }
 
 /** Run multiple queries inside a single transaction. */
 export async function withTransaction<T>(
-  fn: (conn: mysql.PoolConnection) => Promise<T>,
+  fn: (conn: { execute: (sql: string, params?: unknown[]) => Promise<Database.RunResult> }) => Promise<T>,
 ): Promise<T> {
-  const conn = await pool.getConnection();
+  db.exec('BEGIN');
   try {
-    await conn.beginTransaction();
-    const result = await fn(conn);
-    await conn.commit();
+    const fakeConn = {
+      execute: (sql: string, params?: unknown[]) => {
+        return Promise.resolve(db.prepare(sql).run(...(params ?? [])));
+      },
+    };
+    const result = await fn(fakeConn);
+    db.exec('COMMIT');
     return result;
   } catch (err) {
-    await conn.rollback();
+    db.exec('ROLLBACK');
     throw err;
-  } finally {
-    conn.release();
   }
 }

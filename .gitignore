@@ -11,3 +11,5 @@ coverage/
 android/
 ios/
 *.tsbuildinfo
+data/
+keys/*.pem

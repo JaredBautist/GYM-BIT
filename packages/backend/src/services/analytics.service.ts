@@ -217,7 +217,7 @@ export async function getChartData(
         `SELECT record_date, total_calories, calorie_goal
          FROM daily_records
          WHERE user_id = ?
-           AND record_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+           AND record_date >= date('now', '-30 days')
          ORDER BY record_date ASC`,
         [userId],
       );
@@ -234,7 +234,7 @@ export async function getChartData(
         `SELECT DATE(started_at) AS session_date, COUNT(*) AS count
          FROM sessions
          WHERE user_id = ?
-           AND started_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)
+           AND started_at >= datetime('now', '-365 days')
            AND is_active = FALSE
          GROUP BY DATE(started_at)
          ORDER BY session_date ASC`,
@@ -296,11 +296,11 @@ export async function getChartData(
       // Weekly average sleep — last 30 days
       const rows = await query<{ week: string; avg_hours: number }>(
         `SELECT
-           DATE_FORMAT(DATE_SUB(sleep_start, INTERVAL WEEKDAY(sleep_start) DAY), '%Y-%m-%d') AS week,
+           strftime('%Y-%m-%d', sleep_start, 'weekday 0', '-6 days') AS week,
            ROUND(AVG(duration_minutes) / 60, 1) AS avg_hours
          FROM sleep_records
          WHERE user_id = ?
-           AND sleep_start >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+           AND sleep_start >= datetime('now', '-30 days')
          GROUP BY week
          ORDER BY week ASC`,
         [userId],
@@ -320,7 +320,7 @@ export async function getChartData(
       }>(
         `SELECT total_protein, total_carbs, total_fat
          FROM daily_records
-         WHERE user_id = ? AND record_date = CURDATE()
+          WHERE user_id = ? AND record_date = date('now')
          LIMIT 1`,
         [userId],
       );
@@ -336,7 +336,7 @@ export async function getChartData(
       // Muscle recovery by group — based on last session per muscle group
       const rows = await query<{ muscle_group: string; last_trained: Date }>(
         `SELECT
-           JSON_UNQUOTE(JSON_EXTRACT(e.muscle_groups, '$[0]')) AS muscle_group,
+           json_extract(e.muscle_groups, '$[0]') AS muscle_group,
            MAX(sl.logged_at) AS last_trained
          FROM serie_logs sl
          JOIN exercises e ON sl.exercise_id = e.id

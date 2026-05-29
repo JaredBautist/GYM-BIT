@@ -271,7 +271,7 @@ async function applySleepRecordWrite(
     if (existing.length === 0) {
       await query(
         `INSERT INTO sleep_records (id, user_id, sleep_start, sleep_end, duration_minutes, quality_stars, phases, source, recorded_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`,
         [
           entityId,
           payload['userId'],
@@ -376,8 +376,8 @@ export async function processSyncPush(
           await conn.execute(
             `INSERT INTO offline_queue
                (id, user_id, operation, entity_type, entity_id, payload, client_timestamp, is_processed, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, NOW())
-             ON DUPLICATE KEY UPDATE is_processed = TRUE`,
+                           VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, datetime('now'))
+             ON CONFLICT(id) DO UPDATE SET is_processed = TRUE`,
             [
               item.id,
               userId,
