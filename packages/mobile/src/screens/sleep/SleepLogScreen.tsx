@@ -9,7 +9,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, Alert, Dimensions,
 } from 'react-native';
-import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme } from 'victory-native';
+import { BarChart } from 'react-native-chart-kit';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { getSession } from '../../db/repositories/user.repository';
@@ -48,7 +48,7 @@ export default function SleepLogScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/sleep/history`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/sleep/history`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
       if (res.ok) {
@@ -196,12 +196,29 @@ export default function SleepLogScreen(): React.JSX.Element {
       {weeklyData.length > 1 && (
         <View style={styles.chartCard} accessibilityLabel="Gráfico de horas de sueño semanal">
           <Text style={styles.chartTitle}>Últimos 7 días (horas)</Text>
-          <VictoryChart width={SCREEN_WIDTH - 40} height={180} theme={VictoryTheme.material}
-            padding={{ top: 20, bottom: 30, left: 40, right: 20 }}>
-            <VictoryAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: '#6B7280', fontSize: 10 } }} tickFormat={() => ''} />
-            <VictoryAxis dependentAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: '#9CA3AF', fontSize: 10 }, grid: { stroke: '#1F2937' } }} />
-            <VictoryBar data={weeklyData} style={{ data: { fill: '#6366F1', width: 20 } }} />
-          </VictoryChart>
+          <BarChart
+            data={{
+              labels: weeklyData.map(() => ''),
+              datasets: [{ data: weeklyData.map((d) => d.y) }],
+            }}
+            width={SCREEN_WIDTH - 40}
+            height={180}
+            chartConfig={{
+              backgroundGradientFrom: '#1F2937',
+              backgroundGradientTo: '#111827',
+              color: () => '#6366F1',
+              labelColor: () => '#9CA3AF',
+              decimalPlaces: 1,
+              propsForLabels: { fill: '#6B7280', fontSize: 10 },
+              propsForBackgroundLines: { stroke: '#1F2937' },
+            }}
+            withInnerLines
+            withHorizontalLines
+            withVerticalLines={false}
+            fromZero
+            showBarTops={false}
+            style={{ borderRadius: 8 }}
+          />
         </View>
       )}
 

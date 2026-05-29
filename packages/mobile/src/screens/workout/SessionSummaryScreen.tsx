@@ -53,7 +53,7 @@ export default function SessionSummaryScreen(): React.JSX.Element {
       if (!session) return;
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/workouts/prs`,
+        `${process.env['EXPO_PUBLIC_API_URL']}/workouts/prs`,
         { headers: { Authorization: `Bearer ${session.accessToken}` } },
       );
 

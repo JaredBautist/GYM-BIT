@@ -12,13 +12,21 @@ export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
+    let isMounted = true;
+
     getSession().then((session) => {
+      if (!isMounted) return;
+
       if (session) {
         router.replace('/(tabs)');
       } else {
         router.replace('/auth/login');
       }
     });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (

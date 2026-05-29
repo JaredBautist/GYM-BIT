@@ -170,7 +170,7 @@ export default function OnboardingScreen(): React.JSX.Element {
       }
 
       // Actualizar perfil en el servidor
-      const profileResponse = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/profile`, {
+      const profileResponse = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -194,7 +194,7 @@ export default function OnboardingScreen(): React.JSX.Element {
       }
 
       // Generar plan de entrenamiento (Req 2.2)
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/workouts/generate`, {
+      await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/workouts/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +209,7 @@ export default function OnboardingScreen(): React.JSX.Element {
       });
 
       // Generar plan nutricional (Req 2.3)
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/plan/generate`, {
+      await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/plan/generate`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });

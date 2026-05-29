@@ -66,7 +66,7 @@ export default function LoginScreen(): React.JSX.Element {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/login`, {
+      const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: form.email.trim(), password: form.password }),
@@ -114,9 +114,9 @@ export default function LoginScreen(): React.JSX.Element {
       const redirectUri = AuthSession.makeRedirectUri({ scheme: 'gymbit' });
 
       const authUrl =
-        `https://${process.env.EXPO_PUBLIC_AUTH0_DOMAIN}/authorize?` +
+        `https://${process.env['EXPO_PUBLIC_AUTH0_DOMAIN']}/authorize?` +
         `response_type=code` +
-        `&client_id=${process.env.EXPO_PUBLIC_AUTH0_CLIENT_ID}` +
+        `&client_id=${process.env['EXPO_PUBLIC_AUTH0_CLIENT_ID']}` +
         `&redirect_uri=${encodeURIComponent(redirectUri)}` +
         `&scope=openid%20profile%20email` +
         `&connection=google-oauth2`;
@@ -128,7 +128,7 @@ export default function LoginScreen(): React.JSX.Element {
         const code = url.searchParams.get('code');
 
         if (code) {
-          const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/callback`, {
+          const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/callback`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ code, redirectUri }),

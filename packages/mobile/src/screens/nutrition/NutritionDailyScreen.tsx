@@ -30,6 +30,13 @@ import { writeOffline } from '../../offline/sync.manager';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+const BarcodeCameraView = CameraView as unknown as React.ComponentType<{
+  style: object;
+  facing: 'back' | 'front';
+  onBarcodeScanned: (event: { data: string }) => void;
+  barcodeScannerSettings: { barcodeTypes: string[] };
+}>;
+
 interface FoodItem {
   id: string;
   name: string;
@@ -86,7 +93,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
       if (!session) return;
 
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/nutrition/daily/${today}`,
+        `${process.env['EXPO_PUBLIC_API_URL']}/nutrition/daily/${today}`,
         { headers: { Authorization: `Bearer ${session.accessToken}` } },
       );
 
@@ -138,7 +145,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
         if (!session) return;
 
         const res = await fetch(
-          `${process.env.EXPO_PUBLIC_API_URL}/nutrition/search?q=${encodeURIComponent(query)}`,
+          `${process.env['EXPO_PUBLIC_API_URL']}/nutrition/search?q=${encodeURIComponent(query)}`,
           { headers: { Authorization: `Bearer ${session.accessToken}` } },
         );
 
@@ -180,7 +187,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
 
       if (isOnline) {
         // Crear comida si no existe
-        const mealRes = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/daily/meals`, {
+        const mealRes = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/daily/meals`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
           body: JSON.stringify({ date: today, mealType: selectedMealType }),
@@ -188,7 +195,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
 
         if (mealRes.ok) {
           const meal = (await mealRes.json()) as { id: string };
-          await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/daily/meals/${meal.id}/foods`, {
+          await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/daily/meals/${meal.id}/foods`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
             body: JSON.stringify({ foodId: food.id, quantityG }),
@@ -217,7 +224,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/barcode`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/barcode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
         body: JSON.stringify({ barcode }),
@@ -384,7 +391,7 @@ export default function NutritionDailyScreen(): React.JSX.Element {
         {/* Escáner de código de barras (Req 6.2) */}
         {activeMode === 'barcode' && cameraPermission?.granted && (
           <View style={styles.cameraContainer} accessibilityLabel="Escáner de código de barras">
-            <CameraView
+            <BarcodeCameraView
               style={styles.camera}
               facing="back"
               onBarcodeScanned={({ data }) => void handleBarcodeScan(data)}

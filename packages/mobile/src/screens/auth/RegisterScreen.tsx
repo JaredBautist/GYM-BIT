@@ -60,7 +60,7 @@ export default function RegisterScreen(): React.JSX.Element {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/register`, {
+      const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

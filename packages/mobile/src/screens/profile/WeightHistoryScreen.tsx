@@ -16,7 +16,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { VictoryChart, VictoryLine, VictoryAxis, VictoryTheme, VictoryScatter } from 'victory-native';
+import { LineChart } from 'react-native-chart-kit';
 
 import { getSession } from '../../db/repositories/user.repository';
 
@@ -44,7 +44,7 @@ export default function WeightHistoryScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/profile/weight/history`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/profile/weight/history`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
 
@@ -77,7 +77,7 @@ export default function WeightHistoryScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/profile/weight`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/profile/weight`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -162,38 +162,35 @@ export default function WeightHistoryScreen(): React.JSX.Element {
       {chartData.length > 1 && (
         <View style={styles.chartCard} accessibilityLabel="Gráfico de evolución de peso">
           <Text style={styles.chartTitle}>Evolución (últimos 30 registros)</Text>
-          <VictoryChart
+          <LineChart
+            data={{
+              datasets: [{
+                data: chartData.map((d) => d.y),
+                color: () => '#6366F1',
+                strokeWidth: 2,
+              }],
+            }}
             width={SCREEN_WIDTH - 40}
             height={220}
-            theme={VictoryTheme.material}
-            padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
-          >
-            <VictoryAxis
-              style={{
-                axis: { stroke: '#374151' },
-                tickLabels: { fill: '#6B7280', fontSize: 10 },
-              }}
-              tickFormat={() => ''}
-            />
-            <VictoryAxis
-              dependentAxis
-              style={{
-                axis: { stroke: '#374151' },
-                tickLabels: { fill: '#9CA3AF', fontSize: 10 },
-                grid: { stroke: '#1F2937' },
-              }}
-            />
-            <VictoryLine
-              data={chartData}
-              style={{ data: { stroke: '#6366F1', strokeWidth: 2 } }}
-              interpolation="monotoneX"
-            />
-            <VictoryScatter
-              data={chartData}
-              size={4}
-              style={{ data: { fill: '#6366F1' } }}
-            />
-          </VictoryChart>
+            chartConfig={{
+              backgroundGradientFrom: '#1F2937',
+              backgroundGradientTo: '#111827',
+              color: () => '#9CA3AF',
+              labelColor: () => '#9CA3AF',
+              decimalPlaces: 1,
+              propsForDots: { r: '4', strokeWidth: '1', stroke: '#6366F1' },
+              propsForBackgroundLines: { stroke: '#1F2937' },
+              propsForLabels: { fill: '#6B7280', fontSize: 10 },
+            }}
+            bezier
+            withDots
+            withInnerLines
+            withOuterLines={false}
+            withVerticalLines={false}
+            withHorizontalLines
+            fromZero={false}
+            style={{ borderRadius: 8 }}
+          />
         </View>
       )}
 

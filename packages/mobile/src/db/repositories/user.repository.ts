@@ -5,7 +5,7 @@
  * Requirements: 1.8, 12.1, 13.1
  */
 
-import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 
 import { dbQuery, dbRun } from '../database';
 
@@ -40,6 +40,46 @@ const USER_ID_KEY = 'gymbit_user_id';
 
 // ── Session persistence (AES-256 via expo-secure-store) ───────────────────────
 
+type SecureStoreModule = typeof import('expo-secure-store');
+
+async function loadSecureStore(): Promise<SecureStoreModule> {
+  return import('expo-secure-store');
+}
+
+function getWebStorage(): Storage | null {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage;
+}
+
+async function setSessionItem(key: string, value: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    getWebStorage()?.setItem(key, value);
+    return;
+  }
+
+  const SecureStore = await loadSecureStore();
+  await SecureStore.setItemAsync(key, value);
+}
+
+async function getSessionItem(key: string): Promise<string | null> {
+  if (Platform.OS === 'web') {
+    return getWebStorage()?.getItem(key) ?? null;
+  }
+
+  const SecureStore = await loadSecureStore();
+  return SecureStore.getItemAsync(key);
+}
+
+async function deleteSessionItem(key: string): Promise<void> {
+  if (Platform.OS === 'web') {
+    getWebStorage()?.removeItem(key);
+    return;
+  }
+
+  const SecureStore = await loadSecureStore();
+  await SecureStore.deleteItemAsync(key);
+}
+
 /**
  * Persiste la sesión del usuario de forma segura.
  * expo-secure-store usa AES-256 en Android (Keystore) y Keychain en iOS.
@@ -52,9 +92,9 @@ export async function saveSession(
   refreshToken: string,
 ): Promise<void> {
   await Promise.all([
-    SecureStore.setItemAsync(USER_ID_KEY, userId),
-    SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
-    SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
+    setSessionItem(USER_ID_KEY, userId),
+    setSessionItem(ACCESS_TOKEN_KEY, accessToken),
+    setSessionItem(REFRESH_TOKEN_KEY, refreshToken),
   ]);
 }
 
@@ -68,9 +108,9 @@ export async function getSession(): Promise<{
   refreshToken: string;
 } | null> {
   const [userId, accessToken, refreshToken] = await Promise.all([
-    SecureStore.getItemAsync(USER_ID_KEY),
-    SecureStore.getItemAsync(ACCESS_TOKEN_KEY),
-    SecureStore.getItemAsync(REFRESH_TOKEN_KEY),
+    getSessionItem(USER_ID_KEY),
+    getSessionItem(ACCESS_TOKEN_KEY),
+    getSessionItem(REFRESH_TOKEN_KEY),
   ]);
 
   if (!userId || !accessToken || !refreshToken) return null;
@@ -83,9 +123,9 @@ export async function getSession(): Promise<{
  */
 export async function clearSession(): Promise<void> {
   await Promise.all([
-    SecureStore.deleteItemAsync(USER_ID_KEY),
-    SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
-    SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+    deleteSessionItem(USER_ID_KEY),
+    deleteSessionItem(ACCESS_TOKEN_KEY),
+    deleteSessionItem(REFRESH_TOKEN_KEY),
   ]);
 }
 

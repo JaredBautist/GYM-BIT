@@ -34,7 +34,7 @@ export default function ForgotPasswordScreen(): React.JSX.Element {
     setError(null);
 
     try {
-      const response = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/auth/forgot-password`, {
+      const response = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() }),

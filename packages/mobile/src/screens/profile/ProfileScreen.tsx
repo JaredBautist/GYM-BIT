@@ -121,7 +121,7 @@ export default function ProfileScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) { router.replace('/auth/login'); return; }
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/profile`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/profile`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
 
@@ -229,7 +229,7 @@ export default function ProfileScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/profile`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/profile`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

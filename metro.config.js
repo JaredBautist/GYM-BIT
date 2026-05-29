@@ -2,25 +2,22 @@ const { getDefaultConfig } = require('expo/metro-config');
 const path = require('path');
 
 const projectRoot = __dirname;
-const monorepoRoot = path.resolve(projectRoot, '../..');
+const mobileRoot = path.resolve(projectRoot, 'packages/mobile');
 
 const config = getDefaultConfig(projectRoot);
 
-// Permitir que Metro resuelva módulos desde la raíz del monorepo sin pisar
-// carpetas internas que Expo añade por defecto.
 config.watchFolders = Array.from(
-  new Set([...(config.watchFolders ?? []), monorepoRoot]),
+  new Set([...(config.watchFolders ?? []), mobileRoot, path.resolve(projectRoot, 'packages/shared')]),
 );
 
 config.resolver.nodeModulesPaths = [
+  path.resolve(mobileRoot, 'node_modules'),
   path.resolve(projectRoot, 'node_modules'),
-  path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-// Resolver el alias @gymbit/shared
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules ?? {}),
-  '@gymbit/shared': path.resolve(monorepoRoot, 'packages/shared/src'),
+  '@gymbit/shared': path.resolve(projectRoot, 'packages/shared/src'),
 };
 
 module.exports = config;

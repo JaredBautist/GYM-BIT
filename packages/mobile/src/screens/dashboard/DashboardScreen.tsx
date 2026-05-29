@@ -10,21 +10,29 @@
  * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 14.3
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   ActivityIndicator, Dimensions, RefreshControl, Alert,
 } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import {
-  VictoryLine, VictoryBar, VictoryPie, VictoryChart,
-  VictoryAxis, VictoryTheme, VictoryScatter,
-} from 'victory-native';
+import { LineChart, BarChart, PieChart } from 'react-native-chart-kit';
 import NetInfo from '@react-native-community/netinfo';
 
 import { getSession } from '../../db/repositories/user.repository';
 
 const W = Dimensions.get('window').width;
+
+const chartConfig = {
+  backgroundGradientFrom: '#1F2937',
+  backgroundGradientTo: '#111827',
+  color: () => '#9CA3AF',
+  labelColor: () => '#9CA3AF',
+  decimalPlaces: 0,
+  propsForDots: { r: '3', strokeWidth: '1', stroke: '#6366F1' },
+  propsForBackgroundLines: { stroke: '#374151' },
+  propsForLabels: { fill: '#6B7280', fontSize: 10 },
+};
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,6 +54,7 @@ interface MacroPoint { x: string; y: number }
 
 export default function DashboardScreen(): React.JSX.Element {
   const router = useRouter();
+  const mountedRef = useRef(true);
 
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [weightData, setWeightData] = useState<ChartPoint[]>([]);
@@ -56,6 +65,12 @@ export default function DashboardScreen(): React.JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   // Actualizar al enfocar la pantalla (Req 9.5)
   useFocusEffect(
     useCallback(() => {
@@ -65,6 +80,7 @@ export default function DashboardScreen(): React.JSX.Element {
 
   useEffect(() => {
     const unsub = NetInfo.addEventListener((state) => {
+      if (!mountedRef.current) return;
       setIsOnline(!!state.isConnected && !!state.isInternetReachable);
     });
     return () => unsub();
@@ -73,10 +89,11 @@ export default function DashboardScreen(): React.JSX.Element {
   async function loadDashboard(): Promise<void> {
     try {
       const session = await getSession();
+      if (!mountedRef.current) return;
       if (!session) { router.replace('/auth/login'); return; }
 
       const headers = { Authorization: `Bearer ${session.accessToken}` };
-      const base = process.env.EXPO_PUBLIC_API_URL;
+      const base = process.env['EXPO_PUBLIC_API_URL'];
 
       // Cargar en paralelo para < 2 s (Req 9.5)
       const [summaryRes, weightRes, caloriesRes, macrosRes, sleepRes] = await Promise.allSettled([
@@ -90,29 +107,35 @@ export default function DashboardScreen(): React.JSX.Element {
       if (summaryRes.status === 'fulfilled' && summaryRes.value.ok) {
         setSummary(await summaryRes.value.json() as DashboardSummary);
       }
+      if (!mountedRef.current) return;
 
       if (weightRes.status === 'fulfilled' && weightRes.value.ok) {
         const data = (await weightRes.value.json()) as Array<{ date: string; value: number }>;
+        if (!mountedRef.current) return;
         setWeightData(data.map((d, i) => ({ x: i + 1, y: d.value })));
       }
 
       if (caloriesRes.status === 'fulfilled' && caloriesRes.value.ok) {
         const data = (await caloriesRes.value.json()) as Array<{ date: string; value: number }>;
+        if (!mountedRef.current) return;
         setCaloriesData(data.slice(-14).map((d, i) => ({ x: i + 1, y: d.value })));
       }
 
       if (macrosRes.status === 'fulfilled' && macrosRes.value.ok) {
         const data = (await macrosRes.value.json()) as Array<{ name: string; value: number }>;
+        if (!mountedRef.current) return;
         setMacrosData(data.map((d) => ({ x: d.name, y: d.value })));
       }
 
       if (sleepRes.status === 'fulfilled' && sleepRes.value.ok) {
         const data = (await sleepRes.value.json()) as Array<{ date: string; value: number }>;
+        if (!mountedRef.current) return;
         setSleepData(data.slice(-8).map((d, i) => ({ x: i + 1, y: d.value })));
       }
     } catch {
       // Datos locales si no hay conexión (Req 9.4)
     } finally {
+      if (!mountedRef.current) return;
       setLoading(false);
       setRefreshing(false);
     }
@@ -122,7 +145,7 @@ export default function DashboardScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/analytics/export/pdf`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/analytics/export/pdf`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
@@ -210,13 +233,26 @@ export default function DashboardScreen(): React.JSX.Element {
       {weightData.length > 1 && (
         <View style={styles.chartCard} accessibilityLabel="Gráfico de evolución de peso">
           <Text style={styles.cardTitle}>Evolución de peso</Text>
-          <VictoryChart width={W - 40} height={180} theme={VictoryTheme.material}
-            padding={{ top: 10, bottom: 30, left: 45, right: 15 }}>
-            <VictoryAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: 'transparent' } }} />
-            <VictoryAxis dependentAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: '#9CA3AF', fontSize: 10 }, grid: { stroke: '#1F2937' } }} />
-            <VictoryLine data={weightData} style={{ data: { stroke: '#6366F1', strokeWidth: 2 } }} interpolation="monotoneX" />
-            <VictoryScatter data={weightData} size={3} style={{ data: { fill: '#6366F1' } }} />
-          </VictoryChart>
+          <LineChart
+            data={{
+              datasets: [{
+                data: weightData.map((d) => d.y),
+                color: () => '#6366F1',
+                strokeWidth: 2,
+              }],
+            }}
+            width={W - 40}
+            height={180}
+            chartConfig={chartConfig}
+            bezier
+            withDots
+            withInnerLines
+            withOuterLines={false}
+            withVerticalLines={false}
+            withHorizontalLines
+            fromZero={false}
+            style={{ borderRadius: 8 }}
+          />
         </View>
       )}
 
@@ -224,12 +260,24 @@ export default function DashboardScreen(): React.JSX.Element {
       {caloriesData.length > 1 && (
         <View style={styles.chartCard} accessibilityLabel="Gráfico de calorías consumidas últimos 14 días">
           <Text style={styles.cardTitle}>Calorías (últimos 14 días)</Text>
-          <VictoryChart width={W - 40} height={160} theme={VictoryTheme.material}
-            padding={{ top: 10, bottom: 30, left: 45, right: 15 }}>
-            <VictoryAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: 'transparent' } }} />
-            <VictoryAxis dependentAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: '#9CA3AF', fontSize: 10 }, grid: { stroke: '#1F2937' } }} />
-            <VictoryBar data={caloriesData} style={{ data: { fill: '#F59E0B', width: 12 } }} />
-          </VictoryChart>
+          <BarChart
+            data={{
+              labels: caloriesData.map(() => ''),
+              datasets: [{ data: caloriesData.map((d) => d.y) }],
+            }}
+            width={W - 40}
+            height={160}
+            chartConfig={{
+              ...chartConfig,
+              color: () => '#F59E0B',
+            }}
+            withInnerLines
+            withHorizontalLines
+            withVerticalLines={false}
+            fromZero
+            showBarTops={false}
+            style={{ borderRadius: 8 }}
+          />
         </View>
       )}
 
@@ -237,14 +285,21 @@ export default function DashboardScreen(): React.JSX.Element {
       {macrosData.length > 0 && macrosData.some((d) => d.y > 0) && (
         <View style={styles.chartCard} accessibilityLabel="Distribución de macronutrientes de hoy">
           <Text style={styles.cardTitle}>Macros de hoy</Text>
-          <VictoryPie
-            data={macrosData}
-            width={W - 40} height={180}
-            colorScale={['#6366F1', '#F59E0B', '#EF4444']}
-            innerRadius={50}
-            labelRadius={75}
-            style={{ labels: { fill: '#D1D5DB', fontSize: 11 } }}
-            padding={{ top: 10, bottom: 10, left: 20, right: 20 }}
+          <PieChart
+            data={macrosData.map((d) => ({
+              name: d.x,
+              population: d.y,
+              color: d.x === 'Proteínas' ? '#6366F1' : d.x === 'Carbos' ? '#F59E0B' : '#EF4444',
+              legendFontColor: '#D1D5DB',
+              legendFontSize: 12,
+            }))}
+            width={W - 40}
+            height={180}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="15"
+            absolute
           />
         </View>
       )}
@@ -253,12 +308,24 @@ export default function DashboardScreen(): React.JSX.Element {
       {sleepData.length > 1 && (
         <View style={styles.chartCard} accessibilityLabel="Gráfico de horas de sueño semanal">
           <Text style={styles.cardTitle}>Sueño semanal (horas)</Text>
-          <VictoryChart width={W - 40} height={160} theme={VictoryTheme.material}
-            padding={{ top: 10, bottom: 30, left: 40, right: 15 }}>
-            <VictoryAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: 'transparent' } }} />
-            <VictoryAxis dependentAxis style={{ axis: { stroke: '#374151' }, tickLabels: { fill: '#9CA3AF', fontSize: 10 }, grid: { stroke: '#1F2937' } }} />
-            <VictoryBar data={sleepData} style={{ data: { fill: '#8B5CF6', width: 20 } }} />
-          </VictoryChart>
+          <BarChart
+            data={{
+              labels: sleepData.map(() => ''),
+              datasets: [{ data: sleepData.map((d) => d.y) }],
+            }}
+            width={W - 40}
+            height={160}
+            chartConfig={{
+              ...chartConfig,
+              color: () => '#8B5CF6',
+            }}
+            withInnerLines
+            withHorizontalLines
+            withVerticalLines={false}
+            fromZero
+            showBarTops={false}
+            style={{ borderRadius: 8 }}
+          />
         </View>
       )}
 

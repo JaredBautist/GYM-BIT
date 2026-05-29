@@ -143,7 +143,7 @@ export default function WorkoutSessionScreen(): React.JSX.Element {
   async function loadExercises(accessToken: string, sid: string): Promise<void> {
     try {
       const res = await fetch(
-        `${process.env.EXPO_PUBLIC_API_URL}/workouts/plan`,
+        `${process.env['EXPO_PUBLIC_API_URL']}/workouts/plan`,
         { headers: { Authorization: `Bearer ${accessToken}` } },
       );
 

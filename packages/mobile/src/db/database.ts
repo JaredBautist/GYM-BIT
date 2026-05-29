@@ -5,21 +5,44 @@
  * Requirements: 12.1, 12.5
  */
 
-import * as SQLite from 'expo-sqlite';
+import { Platform } from 'react-native';
 
 import { CREATE_TABLES_SQL } from './schema';
 
 // ── Singleton de la base de datos ─────────────────────────────────────────────
 
-let _db: SQLite.SQLiteDatabase | null = null;
+type SQLiteModule = typeof import('expo-sqlite');
+type SQLiteDatabase = import('expo-sqlite').SQLiteDatabase;
+type SQLiteRunResult = import('expo-sqlite').SQLiteRunResult;
+
+let _db: SQLiteDatabase | null = null;
+let hasWarnedWebFallback = false;
+
+function warnWebFallback(): void {
+  if (hasWarnedWebFallback) return;
+  hasWarnedWebFallback = true;
+  console.warn('[GymBit] SQLite local storage is disabled on web.');
+}
+
+async function loadSQLite(): Promise<SQLiteModule> {
+  // expo-sqlite is a native module in this app. Importing it at module scope
+  // crashes the web bundle with "Cannot find native module 'ExpoSQLite'".
+  return import('expo-sqlite');
+}
 
 /**
  * Obtiene la instancia singleton de la base de datos SQLite.
  * Crea las tablas si no existen (primera ejecución).
  */
-export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
+export async function getDatabase(): Promise<SQLiteDatabase | null> {
+  if (Platform.OS === 'web') {
+    warnWebFallback();
+    return null;
+  }
+
   if (_db) return _db;
 
+  const SQLite = await loadSQLite();
   _db = await SQLite.openDatabaseAsync('gymbit.db');
 
   // Habilitar WAL mode para mejor rendimiento concurrente
@@ -38,6 +61,11 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
  * Cierra la conexión a la base de datos (útil en tests).
  */
 export async function closeDatabase(): Promise<void> {
+  if (Platform.OS === 'web') {
+    _db = null;
+    return;
+  }
+
   if (_db) {
     await _db.closeAsync();
     _db = null;
@@ -52,6 +80,7 @@ export async function dbQuery<T>(
   params: (string | number | null)[] = [],
 ): Promise<T[]> {
   const db = await getDatabase();
+  if (!db) return [];
   return db.getAllAsync<T>(sql, params);
 }
 
@@ -61,8 +90,11 @@ export async function dbQuery<T>(
 export async function dbRun(
   sql: string,
   params: (string | number | null)[] = [],
-): Promise<SQLite.SQLiteRunResult> {
+): Promise<SQLiteRunResult> {
   const db = await getDatabase();
+  if (!db) {
+    return { changes: 0, lastInsertRowId: 0 } as SQLiteRunResult;
+  }
   return db.runAsync(sql, params);
 }
 
@@ -73,6 +105,7 @@ export async function dbTransaction(
   operations: Array<{ sql: string; params?: (string | number | null)[] }>,
 ): Promise<void> {
   const db = await getDatabase();
+  if (!db) return;
   await db.withTransactionAsync(async () => {
     for (const op of operations) {
       await db.runAsync(op.sql, op.params ?? []);

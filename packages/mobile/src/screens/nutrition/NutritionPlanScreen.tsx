@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   Dimensions,
 } from 'react-native';
-import { VictoryPie } from 'victory-native';
+import { PieChart } from 'react-native-chart-kit';
 
 import { getSession } from '../../db/repositories/user.repository';
 
@@ -43,7 +43,7 @@ export default function NutritionPlanScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/plan`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/plan`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
 
@@ -73,7 +73,7 @@ export default function NutritionPlanScreen(): React.JSX.Element {
       const session = await getSession();
       if (!session) return;
 
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/nutrition/plan/generate`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/nutrition/plan/generate`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
@@ -91,9 +91,27 @@ export default function NutritionPlanScreen(): React.JSX.Element {
   // Datos para el gráfico donut de macros
   const macroData = plan
     ? [
-        { x: 'Proteínas', y: plan.proteinGoalG * 4, label: `${plan.proteinGoalG}g`, color: '#6366F1' },
-        { x: 'Carbos', y: plan.carbsGoalG * 4, label: `${plan.carbsGoalG}g`, color: '#F59E0B' },
-        { x: 'Grasas', y: plan.fatGoalG * 9, label: `${plan.fatGoalG}g`, color: '#EF4444' },
+        {
+          name: 'Proteínas',
+          population: plan.proteinGoalG * 4,
+          color: '#6366F1',
+          legendFontColor: '#D1D5DB',
+          legendFontSize: 12,
+        },
+        {
+          name: 'Carbos',
+          population: plan.carbsGoalG * 4,
+          color: '#F59E0B',
+          legendFontColor: '#D1D5DB',
+          legendFontSize: 12,
+        },
+        {
+          name: 'Grasas',
+          population: plan.fatGoalG * 9,
+          color: '#EF4444',
+          legendFontColor: '#D1D5DB',
+          legendFontSize: 12,
+        },
       ]
     : [];
 
@@ -117,35 +135,22 @@ export default function NutritionPlanScreen(): React.JSX.Element {
             <Text style={styles.calorieLabel}>kcal / día</Text>
           </View>
 
-          {/* Gráfico donut de macros (Victory Native) */}
+          {/* Gráfico donut de macros */}
           <View style={styles.chartCard} accessibilityLabel="Distribución de macronutrientes">
             <Text style={styles.chartTitle}>Distribución de macros</Text>
-            <VictoryPie
+            <PieChart
               data={macroData}
               width={SCREEN_WIDTH - 40}
               height={220}
-              colorScale={macroData.map((d) => d.color)}
-              innerRadius={60}
-              labelRadius={90}
-              style={{
-                labels: { fill: '#D1D5DB', fontSize: 12, fontWeight: '600' },
+              chartConfig={{
+                color: () => '#D1D5DB',
+                labelColor: () => '#D1D5DB',
               }}
-              padding={{ top: 10, bottom: 10, left: 20, right: 20 }}
+              accessor="population"
+              backgroundColor="transparent"
+              paddingLeft="15"
+              absolute
             />
-            {/* Leyenda */}
-            <View style={styles.legend}>
-              {[
-                { label: 'Proteínas', value: plan.proteinGoalG, color: '#6366F1', kcal: plan.proteinGoalG * 4 },
-                { label: 'Carbohidratos', value: plan.carbsGoalG, color: '#F59E0B', kcal: plan.carbsGoalG * 4 },
-                { label: 'Grasas', value: plan.fatGoalG, color: '#EF4444', kcal: plan.fatGoalG * 9 },
-              ].map(({ label, value, color, kcal }) => (
-                <View key={label} style={styles.legendItem}>
-                  <View style={[styles.legendDot, { backgroundColor: color }]} />
-                  <Text style={styles.legendLabel}>{label}</Text>
-                  <Text style={styles.legendValue}>{value}g ({kcal} kcal)</Text>
-                </View>
-              ))}
-            </View>
           </View>
 
           <Text style={styles.generatedAt}>

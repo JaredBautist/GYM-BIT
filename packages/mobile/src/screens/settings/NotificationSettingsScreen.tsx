@@ -39,7 +39,7 @@ export default function NotificationSettingsScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/notifications/settings`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/notifications/settings`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
       if (res.ok) {
@@ -60,7 +60,7 @@ export default function NotificationSettingsScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      await fetch(`${process.env.EXPO_PUBLIC_API_URL}/notifications/settings`, {
+      await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/notifications/settings`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
         body: JSON.stringify({ notificationType, isEnabled }),

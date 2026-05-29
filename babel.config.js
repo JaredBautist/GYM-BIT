@@ -13,11 +13,10 @@ module.exports = function (api) {
         {
           root: ['./'],
           alias: {
-            '@gymbit/shared': '../shared/src/index.ts',
+            '@gymbit/shared': './packages/shared/src/index.ts',
           },
         },
       ],
-      'react-native-reanimated/plugin',
     ],
     overrides: [
       {

@@ -15,10 +15,20 @@ export default function RootLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Inicializar la base de datos SQLite al arrancar
     getDatabase()
-      .then(() => setReady(true))
-      .catch(() => setReady(true));
+      .then(() => {
+        if (isMounted) setReady(true);
+      })
+      .catch(() => {
+        if (isMounted) setReady(true);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   if (!ready) {

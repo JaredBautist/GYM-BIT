@@ -27,7 +27,7 @@ export default function WorkoutTab() {
       if (!session) return;
 
       // Intentar desde servidor
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/workouts/plan`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/workouts/plan`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
 

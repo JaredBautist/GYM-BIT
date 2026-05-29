@@ -35,7 +35,7 @@ export default function WearablesScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/wearables/status`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/wearables/status`, {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
       if (res.ok) {
@@ -56,7 +56,7 @@ export default function WearablesScreen(): React.JSX.Element {
     try {
       const session = await getSession();
       if (!session) return;
-      const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/wearables/sync`, {
+      const res = await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/wearables/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.accessToken}` },
         body: JSON.stringify({ provider, records: [] }),
@@ -83,7 +83,7 @@ export default function WearablesScreen(): React.JSX.Element {
           onPress: async () => {
             const session = await getSession();
             if (!session) return;
-            await fetch(`${process.env.EXPO_PUBLIC_API_URL}/wearables/disconnect/${provider}`, {
+            await fetch(`${process.env['EXPO_PUBLIC_API_URL']}/wearables/disconnect/${provider}`, {
               method: 'DELETE',
               headers: { Authorization: `Bearer ${session.accessToken}` },
             });
