@@ -27,7 +27,7 @@ import { useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
 
-import { saveSession } from '../../db/repositories/user.repository.js';
+import { saveSession } from '../../db/repositories/user.repository';
 
 WebBrowser.maybeCompleteAuthSession();
 

@@ -20,8 +20,8 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { getSession, getUserById, upsertUser } from '../../db/repositories/user.repository.js';
-import { dbRun, dbQuery } from '../../db/database.js';
+import { getSession, getUserById, upsertUser } from '../../db/repositories/user.repository';
+import { dbRun, dbQuery } from '../../db/database';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

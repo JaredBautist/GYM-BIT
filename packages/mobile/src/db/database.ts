@@ -7,7 +7,7 @@
 
 import * as SQLite from 'expo-sqlite';
 
-import { CREATE_TABLES_SQL } from './schema.js';
+import { CREATE_TABLES_SQL } from './schema';
 
 // ── Singleton de la base de datos ─────────────────────────────────────────────
 

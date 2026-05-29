@@ -6,7 +6,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { dbQuery, dbRun } from '../database.js';
+import { dbQuery, dbRun } from '../database';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

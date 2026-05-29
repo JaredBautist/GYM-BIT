@@ -41,7 +41,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Configurar HTTPS/TLS 1.2+ en Express
     - _Requisitos: 1.10, 13.2_
 
-- [ ] 3. Implementar Profile_Service (backend)
+- [x] 3. Implementar Profile_Service (backend)
   - [x] 3.1 Implementar endpoints de perfil y mÃ©tricas
     - Crear `GET /profile`, `PUT /profile`, `POST /profile/weight`, `GET /profile/weight/history`, `GET /profile/metrics`
     - Implementar validaciones: altura 100â€“250 cm, peso 30â€“300 kg, edad mÃ­nima 13 aÃ±os
@@ -67,7 +67,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
 - [x] 4. Checkpoint â€” Verificar que todos los tests pasen
   - Asegurar que todos los tests de Auth_Service y Profile_Service pasen. Consultar al usuario si surgen dudas.
 
-- [ ] 5. Implementar Workout_Engine (backend)
+- [x] 5. Implementar Workout_Engine (backend)
   - [x] 5.1 Implementar catÃ¡logo de ejercicios y generaciÃ³n de rutinas
     - Crear `GET /exercises` con filtros por grupo muscular y equipamiento
     - Crear `POST /workouts/generate` con lÃ³gica de selecciÃ³n de tipo de rutina (Full Body / PPL / Upper-Lower / Cardio)
@@ -109,7 +109,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - **Propiedad 8: Ejercicio compuesto recibe incremento â‰¥ ejercicio de aislamiento**
     - **Valida: Requisito 4.4**
 
-- [ ] 6. Implementar Nutrition_Service (backend)
+- [x] 6. Implementar Nutrition_Service (backend)
   - [x] 6.1 Implementar bÃºsqueda y registro de alimentos
     - Crear `GET /nutrition/search?q=` con integraciÃ³n a USDA FoodData API (< 3 s)
     - Crear `POST /nutrition/barcode` para bÃºsqueda por cÃ³digo de barras
@@ -245,7 +245,7 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Mostrar indicador de carga mientras se generan los planes (< 10 s)
     - _Requisitos: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-- [ ] 14. Implementar pantallas de perfil y mÃ©tricas (cliente mÃ³vil)
+- [x] 14. Implementar pantallas de perfil y mÃ©tricas (cliente mÃ³vil)
   - Crear `ProfileScreen` con formulario de ediciÃ³n de datos fÃ­sicos
   - Mostrar IMC, TMB y TDEE calculados en tiempo real al editar altura/peso
   - Implementar `WeightHistoryScreen` con grÃ¡fico de evoluciÃ³n de peso (Victory Native)
@@ -253,8 +253,8 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
   - Al guardar cambios de objetivo, mostrar confirmaciÃ³n de regeneraciÃ³n de planes
   - _Requisitos: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 3.10_
 
-- [ ] 15. Implementar pantallas de entrenamiento en vivo (cliente mÃ³vil)
-  - [ ] 15.1 Implementar pantalla de sesiÃ³n activa
+- [x] 15. Implementar pantallas de entrenamiento en vivo (cliente mÃ³vil)
+  - [x] 15.1 Implementar pantalla de sesiÃ³n activa
     - Crear `WorkoutSessionScreen` con lista de ejercicios del dÃ­a y GIFs demostrativos
     - Implementar temporizador de descanso que inicia automÃ¡ticamente al registrar una serie
     - Mantener pantalla encendida durante sesiÃ³n activa (`expo-keep-awake`)
@@ -262,14 +262,14 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Guardar estado de sesiÃ³n en SQLite para reanudar si la app se cierra
     - _Requisitos: 5.1, 5.2, 5.3, 5.6, 5.7_
 
-  - [ ] 15.2 Implementar resumen de sesiÃ³n y notificaciÃ³n de PR
+  - [x] 15.2 Implementar resumen de sesiÃ³n y notificaciÃ³n de PR
     - Crear `SessionSummaryScreen` con duraciÃ³n, volumen total, ejercicios completados y PRs rotos
     - Mostrar animaciÃ³n/sonido al romper un PR durante la sesiÃ³n
     - Sincronizar sesiÃ³n completada con backend (o encolar si offline)
     - _Requisitos: 5.4, 5.5_
 
-- [ ] 16. Implementar pantallas de nutriciÃ³n (cliente mÃ³vil)
-  - [ ] 16.1 Implementar registro de alimentos
+- [x] 16. Implementar pantallas de nutriciÃ³n (cliente mÃ³vil)
+  - [x] 16.1 Implementar registro de alimentos
     - Crear `NutritionDailyScreen` con vista de comidas del dÃ­a y totales de macros
     - Implementar bÃºsqueda de alimentos con debounce (< 3 s desde USDA o cachÃ© local)
     - Implementar escÃ¡ner de cÃ³digo de barras con `expo-barcode-scanner`
@@ -277,30 +277,30 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
     - Deshabilitar reconocimiento por foto cuando no hay conexiÃ³n
     - _Requisitos: 6.1, 6.2, 6.3, 6.4, 6.7_
 
-  - [ ] 16.2 Implementar recetas y plan nutricional
+  - [x] 16.2 Implementar recetas y plan nutricional
     - Crear `RecipesScreen` para ver y crear recetas con ingredientes
     - Crear `NutritionPlanScreen` con objetivo calÃ³rico y distribuciÃ³n de macros
     - Mostrar progreso diario de macros con grÃ¡fico donut (Victory Native)
     - _Requisitos: 6.5, 6.6, 7.1, 7.2, 7.3_
 
-- [ ] 17. Implementar pantallas de sueÃ±o, wearables y notificaciones (cliente mÃ³vil)
-  - [ ] 17.1 Implementar registro de sueÃ±o
+- [x] 17. Implementar pantallas de sueÃ±o, wearables y notificaciones (cliente mÃ³vil)
+  - [x] 17.1 Implementar registro de sueÃ±o
     - Crear `SleepLogScreen` con selector de hora inicio/fin y calificaciÃ³n de calidad (1â€“5 estrellas)
     - Mostrar historial de sueÃ±o con grÃ¡fico de barras semanal (Victory Native)
     - _Requisitos: 8.1, 8.2_
 
-  - [ ] 17.2 Implementar integraciÃ³n con wearables
+  - [x] 17.2 Implementar integraciÃ³n con wearables
     - Crear `WearablesScreen` con estado de conexiÃ³n por proveedor (HealthKit, Garmin, Google Fit)
     - Implementar flujo de conexiÃ³n/desconexiÃ³n por proveedor
     - Mostrar Ãºltima sincronizaciÃ³n y datos importados
     - _Requisitos: 10.1, 10.2, 10.3, 10.4_
 
-  - [ ] 17.3 Implementar configuraciÃ³n de notificaciones
+  - [x] 17.3 Implementar configuraciÃ³n de notificaciones
     - Crear `NotificationSettingsScreen` con toggles por tipo de notificaciÃ³n y selector de horario
     - Implementar conexiÃ³n con Google Calendar / Apple Calendar
     - _Requisitos: 11.1, 11.2, 11.4_
 
-- [ ] 18. Implementar Dashboard y Analytics (cliente mÃ³vil)
+- [x] 18. Implementar Dashboard y Analytics (cliente mÃ³vil)
   - Crear `DashboardScreen` con resumen diario: calorÃ­as restantes, prÃ³xima sesiÃ³n, sueÃ±o, hidrataciÃ³n, mensaje motivacional
   - Implementar todos los grÃ¡ficos con Victory Native: evoluciÃ³n de peso (lÃ­nea), calorÃ­as vs objetivo (barras), heatmap de entrenamiento, progreso de PRs (lÃ­nea), evoluciÃ³n de IMC (lÃ­nea), sueÃ±o semanal (barras), macros (donut), recuperaciÃ³n muscular (radar)
   - Mostrar grÃ¡ficos con datos locales cuando no hay conexiÃ³n
@@ -308,57 +308,57 @@ ImplementaciÃ³n incremental de GymBit como plataforma fitness multiplataforma 
   - Actualizar dashboard en < 2 s al navegar a la pantalla principal
   - _Requisitos: 9.1, 9.2, 9.3, 9.4, 9.5, 14.3_
 
-- [ ] 19. Checkpoint â€” Verificar que la app mÃ³vil funciona correctamente
+- [x] 19. Checkpoint â€” Verificar que la app mÃ³vil funciona correctamente
   - Ejecutar suite de tests del cliente mÃ³vil. Verificar flujos principales: auth, onboarding, entrenamiento, nutriciÃ³n, sueÃ±o, dashboard. Consultar al usuario si surgen dudas.
 
-- [ ] 20. Implementar versiÃ³n web PWA (React)
-  - [ ] 20.1 Configurar proyecto React PWA con Service Worker
+- [x] 20. Implementar versiÃ³n web PWA (React)
+  - [x] 20.1 Configurar proyecto React PWA con Service Worker
     - Inicializar proyecto React con Vite + TypeScript
     - Configurar Service Worker para cachÃ© offline de assets y datos
     - Configurar IndexedDB con la misma estructura de tablas locales que SQLite (secciÃ³n 4.3 del diseÃ±o)
     - Implementar Cola_Offline en IndexedDB con la misma lÃ³gica que el cliente mÃ³vil
     - _Requisitos: 12.1, 12.2, 12.5_
 
-  - [ ] 20.2 Implementar pantallas web con Recharts
+  - [x] 20.2 Implementar pantallas web con Recharts
     - Reutilizar lÃ³gica de negocio del paquete `shared`
     - Implementar todas las pantallas equivalentes a la versiÃ³n mÃ³vil
     - Usar Recharts para todos los grÃ¡ficos (equivalente a Victory Native)
     - Implementar navegaciÃ³n completa por teclado en todos los formularios e interacciones
     - _Requisitos: 9.2, 14.1, 15.4_
 
-- [ ] 21. Implementar accesibilidad, i18n, modo oscuro y rendimiento
-  - [ ] 21.1 Implementar accesibilidad WCAG 2.1 AA
+- [x] 21. Implementar accesibilidad, i18n, modo oscuro y rendimiento
+  - [x] 21.1 Implementar accesibilidad WCAG 2.1 AA
     - Agregar `aria-label` o equivalente nativo en todos los elementos interactivos
     - Verificar ratio de contraste â‰¥ 4.5:1 en modo claro y oscuro
     - Implementar navegaciÃ³n por teclado completa en web
     - Implementar soporte para gestos de accesibilidad del SO en mÃ³vil
     - _Requisitos: 15.1, 15.2, 15.3, 15.4_
 
-  - [ ] 21.2 Implementar modo oscuro y modo claro
+  - [x] 21.2 Implementar modo oscuro y modo claro
     - Detectar preferencia del SO con `useColorScheme` (mÃ³vil) y `prefers-color-scheme` (web)
     - Aplicar tema dinÃ¡mico en todos los componentes
     - _Requisitos: 14.5_
 
-  - [ ] 21.3 Implementar internacionalizaciÃ³n (i18n)
+  - [x] 21.3 Implementar internacionalizaciÃ³n (i18n)
     - Configurar `i18next` con espaÃ±ol como idioma principal
     - Extraer todos los strings de la UI a archivos de traducciÃ³n
     - Estructurar para agregar idiomas adicionales sin cambios en el cÃ³digo
     - _Requisitos: 14.6_
 
-  - [ ] 21.4 Optimizar rendimiento de carga inicial
+  - [x] 21.4 Optimizar rendimiento de carga inicial
     - Implementar code splitting y lazy loading de pantallas
     - Optimizar bundle para carga inicial < 3 s en 4G
     - Implementar cachÃ© de datos frecuentes en Redis (backend) y almacenamiento local (cliente)
     - _Requisitos: 14.1, 14.2_
 
-- [ ] 22. Implementar seguridad y cumplimiento normativo
+- [x] 22. Implementar seguridad y cumplimiento normativo
   - Implementar cifrado AES-256 para todos los datos en reposo (almacenamiento local y DB)
   - Implementar endpoint `DELETE /users/:id` para eliminaciÃ³n permanente de datos en â‰¤ 30 dÃ­as (GDPR)
   - Implementar endpoint `GET /users/:id/export` para exportaciÃ³n de datos en JSON en < 24 h
   - Cifrar tokens de wearables en `WEARABLE_CONNECTIONS` (`access_token_enc`, `refresh_token_enc`)
   - _Requisitos: 13.1, 13.2, 13.3, 13.4, 13.5_
 
-- [ ] 23. Checkpoint final â€” Verificar integraciÃ³n completa y todos los tests
+- [x] 23. Checkpoint final â€” Verificar integraciÃ³n completa y todos los tests
   - Ejecutar suite completa de tests (backend + mÃ³vil + web). Verificar que todos los requisitos estÃ©n cubiertos. Consultar al usuario si surgen dudas.
 
 ---

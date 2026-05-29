@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { saveSession } from '../../db/repositories/user.repository.js';
+import { saveSession } from '../../db/repositories/user.repository';
 
 interface RegisterForm {
   name: string;

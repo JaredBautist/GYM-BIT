@@ -7,7 +7,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 
-import { dbQuery, dbRun } from '../database.js';
+import { dbQuery, dbRun } from '../database';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

@@ -17,8 +17,8 @@ import {
   getPendingItems,
   markItemsProcessed,
   getPendingCount,
-} from './queue.js';
-import { getSession } from '../db/repositories/user.repository.js';
+} from './queue';
+import { getSession } from '../db/repositories/user.repository';
 import type { OfflineOperation, OfflineEntityType } from '@gymbit/shared';
 
 // ── Config ────────────────────────────────────────────────────────────────────

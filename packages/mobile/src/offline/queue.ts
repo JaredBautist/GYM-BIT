@@ -12,7 +12,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 
-import { dbQuery, dbRun } from '../db/database.js';
+import { dbQuery, dbRun } from '../db/database';
 import type { OfflineOperation, OfflineEntityType, OfflineQueueItem } from '@gymbit/shared';
 
 // ── Types ────────────────────────────────────────────────────────────────────

@@ -43,7 +43,8 @@
         {
           "cameraPermission": "Allow GymBit to access your camera."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "scheme": "gymbit"
   }

@@ -3,7 +3,7 @@
  * These are pure functions used by both backend and frontend.
  */
 
-import type { Gender, ExperienceLevel } from '../types/user.js';
+import type { Gender, ExperienceLevel } from '../types/user';
 
 /** Activity multipliers for TDEE calculation (Requirement 3.5) */
 export const ACTIVITY_FACTORS: Record<ExperienceLevel, number> = {

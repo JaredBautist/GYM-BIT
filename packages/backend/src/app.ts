@@ -18,6 +18,7 @@ import { nutritionPhotoRouter } from './routes/nutrition/photo.js';
 import { profileRouter } from './routes/profile/index.js';
 import { sleepRouter } from './routes/sleep/index.js';
 import { syncRouter } from './routes/sync/index.js';
+import { usersRouter } from './routes/users/index.js';
 import { wearableRouter } from './routes/wearables/index.js';
 import { workoutRouter, exercisesRouter } from './routes/workouts/index.js';
 
@@ -78,6 +79,7 @@ export function createApp(): express.Application {
   app.use('/wearables', wearableRouter);
   app.use('/notifications', notificationRouter);
   app.use('/sync', syncRouter);
+  app.use('/users', usersRouter);
 
   // ── 404 handler ──────────────────────────────────────────────────────────
   app.use((_req, res) => {
