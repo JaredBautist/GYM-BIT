@@ -214,6 +214,27 @@ export default function OnboardingScreen(): React.JSX.Element {
         headers: { Authorization: `Bearer ${session.accessToken}` },
       });
 
+      // Guardar perfil localmente
+      await upsertUser({
+        id: session.userId,
+        email: '',
+        name: '',
+        auth0Id: null,
+        isActive: 1,
+        emailVerified: 0,
+        birthDate: data.birthDate,
+        gender: data.gender,
+        heightCm: parseFloat(data.heightCm),
+        weightKg: parseFloat(data.weightKg),
+        goal: data.goal,
+        experienceLevel: data.experienceLevel,
+        availableDays: data.availableDays,
+        medicalConditions: null,
+        bmi: null,
+        bmr: null,
+        tdee: null,
+      });
+
       // Limpiar progreso guardado
       await dbRun('DELETE FROM users_cache WHERE id = ?', [ONBOARDING_CACHE_KEY]);
 

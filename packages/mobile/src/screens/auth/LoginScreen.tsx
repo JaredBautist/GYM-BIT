@@ -98,7 +98,7 @@ export default function LoginScreen(): React.JSX.Element {
       if (data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
         // Persistir sesión localmente (AES-256 via expo-secure-store) — Req 1.8
         await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
-        router.replace('/(tabs)');
+        router.replace('/');
       }
     } catch {
       setError('Error de conexión. Verifica tu internet e intenta de nuevo.');
@@ -144,7 +144,7 @@ export default function LoginScreen(): React.JSX.Element {
 
           if (response.ok && data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
             await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
-            router.replace('/(tabs)');
+            router.replace('/');
           } else {
             setError(data.error ?? 'Error al autenticar con Google.');
           }

@@ -1,12 +1,12 @@
 /**
- * Pantalla de entrada — redirige según estado de sesión.
+ * Pantalla de entrada — redirige según estado de sesión y onboarding.
  */
 
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator } from 'react-native';
 
-import { getSession } from '../src/db/repositories/user.repository';
+import { getSession, getUserById } from '../src/db/repositories/user.repository';
 
 export default function Index() {
   const router = useRouter();
@@ -14,11 +14,13 @@ export default function Index() {
   useEffect(() => {
     let isMounted = true;
 
-    getSession().then((session) => {
+    getSession().then(async (session) => {
       if (!isMounted) return;
 
       if (session) {
-        router.replace('/(tabs)');
+        const user = await getUserById(session.userId);
+        const hasOnboarding = user && user.goal && user.heightCm && user.weightKg;
+        router.replace(hasOnboarding ? '/(tabs)' : '/onboarding');
       } else {
         router.replace('/auth/login');
       }
