@@ -76,10 +76,10 @@ export default function LoginScreen(): React.JSX.Element {
       });
 
       const data = (await response.json()) as {
-        accessToken?: string;
-        refreshToken?: string;
+        tokens?: { accessToken: string; refreshToken: string };
         user?: { id: string };
         code?: string;
+        error?: string;
         message?: string;
         blockedMinutes?: number;
       };
@@ -90,14 +90,14 @@ export default function LoginScreen(): React.JSX.Element {
           setBlockMinutes(data.blockedMinutes ?? 15);
           setError(`Cuenta bloqueada por ${data.blockedMinutes ?? 15} minutos por intentos fallidos.`);
         } else {
-          setError(data.message ?? 'Credenciales incorrectas. Intenta de nuevo.');
+          setError(data.error ?? data.message ?? 'Credenciales incorrectas. Intenta de nuevo.');
         }
         return;
       }
 
-      if (data.accessToken && data.refreshToken && data.user?.id) {
+      if (data.tokens?.accessToken && data.tokens?.refreshToken && data.user?.id) {
         // Persistir sesión localmente (AES-256 via expo-secure-store) — Req 1.8
-        await saveSession(data.user.id, data.accessToken, data.refreshToken);
+        await saveSession(data.user.id, data.tokens.accessToken, data.tokens.refreshToken);
         router.replace('/(tabs)');
       }
     } catch {

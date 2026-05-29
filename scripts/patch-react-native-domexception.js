@@ -163,3 +163,23 @@ patchFile(
   ],
   'Expo AuthSession TokenRequest',
 );
+
+patchFile(
+  'node_modules/expo/src/async-require/hmr.ts',
+  [
+    [
+      `  registerBundle(requestUrl: string) {
+    assert(hmrClient, 'Expected HMRClient.setup() call at startup.');
+    pendingEntryPoints.push(requestUrl);
+    registerBundleEntryPoints(hmrClient);
+  },`,
+      `  registerBundle(requestUrl: string) {
+    pendingEntryPoints.push(requestUrl);
+    if (hmrClient) {
+      registerBundleEntryPoints(hmrClient);
+    }
+  },`,
+    ],
+  ],
+  'Expo HMR registerBundle',
+);

@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: gymbit-backend
-    env: node
-    buildCommand: npm install && npm run build --workspace @gymbit/backend
-    startCommand: node packages/backend/scripts/setup.mjs && node packages/backend/dist/index.js
-    plan: free

@@ -26,6 +26,7 @@ import https from 'https';
 
 import { env } from './config/env.js';
 import { createApp } from './app.js';
+import { connectRedis } from './services/redis.service.js';
 
 const app = createApp();
 
@@ -41,29 +42,31 @@ const useTls =
   typeof tlsKeyPath === 'string' &&
   tlsKeyPath.length > 0;
 
-if (useTls) {
-  // Direct TLS termination in Node.js — enforces TLS 1.2 as the minimum.
-  // In most production deployments this path is NOT taken because TLS is
-  // handled by the load balancer; this is provided as a fallback.
-  const tlsOptions: https.ServerOptions = {
-    cert: fs.readFileSync(tlsCertPath as string),
-    key: fs.readFileSync(tlsKeyPath as string),
-    minVersion: 'TLSv1.2',
-  };
-
-  https.createServer(tlsOptions, app).listen(env.PORT, () => {
-    console.log(
-      `🔒 GymBit backend running on HTTPS port ${env.PORT} [${env.NODE_ENV}] (TLS ≥ 1.2)`,
-    );
-  });
-} else {
-  // Development / staging — plain HTTP (TLS handled externally in production).
-  http.createServer(app).listen(env.PORT, () => {
-    console.log(`🚀 GymBit backend running on port ${env.PORT} [${env.NODE_ENV}]`);
-    if (env.NODE_ENV === 'production') {
-      console.log(
-        '   ℹ️  TLS is expected to be terminated by the upstream load balancer.',
-      );
+connectRedis()
+  .catch((err) => {
+    console.error('Failed to connect to Redis:', err);
+    process.exit(1);
+  })
+  .then(() => {
+    if (useTls) {
+      const tlsOptions: https.ServerOptions = {
+        cert: fs.readFileSync(tlsCertPath as string),
+        key: fs.readFileSync(tlsKeyPath as string),
+        minVersion: 'TLSv1.2',
+      };
+      https.createServer(tlsOptions, app).listen(env.PORT, () => {
+        console.log(
+          `🔒 GymBit backend running on HTTPS port ${env.PORT} [${env.NODE_ENV}] (TLS ≥ 1.2)`,
+        );
+      });
+    } else {
+      http.createServer(app).listen(env.PORT, () => {
+        console.log(`🚀 GymBit backend running on port ${env.PORT} [${env.NODE_ENV}]`);
+        if (env.NODE_ENV === 'production') {
+          console.log(
+            '   ℹ️  TLS is expected to be terminated by the upstream load balancer.',
+          );
+        }
+      });
     }
   });
-}

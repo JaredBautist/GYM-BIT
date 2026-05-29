@@ -43,8 +43,8 @@ export default function ForgotPasswordScreen(): React.JSX.Element {
       if (response.ok) {
         setSent(true);
       } else {
-        const data = (await response.json()) as { message?: string };
-        setError(data.message ?? 'Error al enviar el correo. Intenta de nuevo.');
+        const data = (await response.json()) as { error?: string; message?: string };
+        setError(data.error ?? data.message ?? 'Error al enviar el correo. Intenta de nuevo.');
       }
     } catch {
       setError('Error de conexión. Verifica tu internet e intenta de nuevo.');

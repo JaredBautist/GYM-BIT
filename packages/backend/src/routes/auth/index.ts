@@ -6,7 +6,6 @@ import {
   registerLocal,
   loginLocal,
   handleOAuthCallback,
-  handleGoogleAuth,
   refreshAccessToken,
   logout,
   forgotPassword,
@@ -36,12 +35,6 @@ const loginSchema = z.object({
 const callbackSchema = z.object({
   code: z.string().min(1),
   redirectUri: z.string().url(),
-});
-
-const googleAuthSchema = z.object({
-  code: z.string().min(1),
-  clientId: z.string().min(1),
-  redirectUri: z.string().min(1),
 });
 
 const refreshSchema = z.object({
@@ -203,26 +196,6 @@ authRouter.post(
 
     try {
       const result = await handleOAuthCallback(parsed.data);
-      res.status(200).json(result);
-    } catch (err) {
-      errorResponse(res, err);
-    }
-  }),
-);
-
-// ── POST /auth/google ─────────────────────────────────────────────────────────
-
-authRouter.post(
-  '/google',
-  asyncHandler(async (req, res) => {
-    const parsed = googleAuthSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: 'Validation failed', details: parsed.error.flatten() });
-      return;
-    }
-
-    try {
-      const result = await handleGoogleAuth(parsed.data);
       res.status(200).json(result);
     } catch (err) {
       errorResponse(res, err);

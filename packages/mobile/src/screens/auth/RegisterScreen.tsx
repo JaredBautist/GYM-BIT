@@ -71,15 +71,22 @@ export default function RegisterScreen(): React.JSX.Element {
       });
 
       const data = (await response.json()) as {
+        error?: string;
         message?: string;
         code?: string;
+        details?: { fieldErrors?: Record<string, string[]> };
         accessToken?: string;
         refreshToken?: string;
         user?: { id: string };
       };
 
       if (!response.ok) {
-        setError(data.message ?? 'Error al crear la cuenta. Intenta de nuevo.');
+        if (data.details?.fieldErrors) {
+          const msgs = Object.values(data.details.fieldErrors).flat();
+          setError(msgs.join('\n') || data.error || 'Error al crear la cuenta. Intenta de nuevo.');
+        } else {
+          setError(data.error ?? data.message ?? 'Error al crear la cuenta. Intenta de nuevo.');
+        }
         return;
       }
 
